@@ -6,14 +6,14 @@ module.exports = {
       colors: {
         primary: "#161622",
         secondary: {
-          DEFAULT: "#FF9C01",
-          100: "#FF9001",
-          200: "#FF8E01",
+          DEFAULT: "#00c5cb",
+          100: "#00c5cb",
+          200: "#00c5cb",
         },
         black: {
           DEFAULT: "#000",
           100: "#1E1E2D",
-          200: "#232533",
+          200: "#04c8c3",
         },
         gray: {
           100: "#CDCDE0",
