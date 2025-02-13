@@ -17,7 +17,7 @@ export default function App() {
             resizeMode="contain"
           />
           <View className="relative">
-            <Text className="text-3xl text-white font-bold text-center">
+            <Text className="text-2xl text-white font-bold text-center">
             Making pet care simple and reliable with
               <Text className="text-secondary-200"> PawPal</Text>
               .
