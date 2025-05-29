@@ -12,9 +12,20 @@ import FormField from '../../components/FormField'
 
 import CustomButton from '../../components/CustomButton'
 
+import axios from 'axios' //lib to make the HTTP requests backend
+
+import AsyncStorage from '@react-native-async-storage/async-storage'//store data on the user's device
+
+import { Alert } from 'react-native' // native alert popups
+
+import { useRouter } from 'expo-router' // hook from expo to navigate between screens
+
+
 
 
 const SignIn = () => {
+
+  const router = useRouter()
 
   const [form, setForm] = useState({
     email: '',
@@ -23,8 +34,43 @@ const SignIn = () => {
   
 const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const submit=() => {
+//on submit, form validation to ensure email and password are not empty
 
+  const submit= async () => {
+    if (!form.email || !form.password){
+      Alert.alert('Invalid email or password.') // native pop up in case fields are empty
+      return
+    }
+
+    try {
+      setIsSubmitting(true) // loading state set to true. use for spinner on submit button
+      
+      // POST request to Django. await pauses until a response is sent from server side
+
+      const response = await axios.post('',{
+        username: form.email,
+        password: form.password
+      })
+
+      // Extract tokens from response. If login successful, Django returns a JSON object with the following tokens
+
+      const { access, refresh } = response.data 
+
+      //Stores tokens on device
+
+      await AsyncStorage.setItem('accessToken', access) // short lived token for authenticated requests
+      await AsyncStorage.setItem('refreshToken', refresh) // get a new access token in case it expires
+
+      router.replace('') //page after authentication
+      
+      // error handling from axios call
+
+    } catch (error) {
+      console.error(error.response?.data || error.message)
+      Alert.alert('Login failed.', 'Invalid credentials or server error.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
