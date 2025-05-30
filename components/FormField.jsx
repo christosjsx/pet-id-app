@@ -1,5 +1,5 @@
 import { View, Text, TextInput, TouchableOpacity, Image } from 'react-native'
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { icons } from '../constants'
 
 const FormField = ({
@@ -27,7 +27,7 @@ const FormField = ({
           placeholder={placeholder}
           placeholderTextColor="#7b7b8b"
           onChangeText={handleChangeText}
-          secureTextEntry={title==='Password' && !showPassword}
+          secureTextEntry={title==='Password:' && !showPassword}
           {...props}
         />
 
