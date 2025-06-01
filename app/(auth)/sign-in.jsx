@@ -21,8 +21,8 @@ const SignIn = () => {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const submit = async () => {
-    const email = form.email.trim()
-    const password = form.password.trim()
+    const email = form.email
+    const password = form.password
 
     if (!email || !password) {
       Alert.alert('Missing Fields', 'Please enter both email and password.')
@@ -32,7 +32,7 @@ const SignIn = () => {
     try {
       setIsSubmitting(true)
 
-      const response = await axios.post('http://192.168.0.101:8000/api/user/token/', {
+      const response = await axios.post('http://192.168.0.102:8000/api/user/token/', {
         'username': email,
         'password': password
       })
@@ -52,9 +52,9 @@ const SignIn = () => {
   }
 
   return (
-    <SafeAreaView className='bg-primary h-full'>
+    <SafeAreaView className='bg-primary-900 h-full'>
       <ScrollView>
-        <View className='w-full justify-center min-h-[85vh] px-4 my-6'>
+        <View className='w-full min-h-[85vh] px-4 my-6'>
 
           {/* Logo section */}
           <View className='flex-row items-center'>
@@ -62,7 +62,7 @@ const SignIn = () => {
             <Image source={images.logoName} resizeMode='contain' className='w-[100px] h-[70px]' />
           </View>
 
-          <Text className='text-2xl text-white font-psemibold mt-10'>
+          <Text className='text-2xl text-white font-psemibold mt-5'>
             Log in to our services.
           </Text>
 
@@ -86,7 +86,7 @@ const SignIn = () => {
           <CustomButton
             title='Sign In'
             handlePress={submit}
-            containerStyles='mt-7'
+            containerStyles='mt-10'
             isLoading={isSubmitting}
           />
 
@@ -95,7 +95,7 @@ const SignIn = () => {
             <Text className='text-lg text-gray-100 font-regular'>
               Don't have an account?
             </Text>
-            <Link href='/sign-up' className='text-lg font-psemibold text-secondary'>
+            <Link href='/sign-up' className='text-lg font-psemibold text-accent-ble'>
               Sign Up
             </Link>
           </View>

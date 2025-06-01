@@ -8,7 +8,6 @@ import FormField from '../../components/FormField'
 import CustomButton from '../../components/CustomButton'
 
 import axios from 'axios'
-import AsyncStorage from '@react-native-async-storage/async-storage'
 
 const SignUp = () => {
   const router = useRouter()
@@ -53,12 +52,8 @@ const SignUp = () => {
       // Extract tokens from Django response
       const { access, refresh } = response.data
 
-      // Store tokens on the device
-      await AsyncStorage.setItem('accessToken', access)
-      await AsyncStorage.setItem('refreshToken', refresh)
-
-      // Navigate to home screen
-      router.replace('home')
+      // Navigate to sign in screen
+      router.replace('sign-in')
 
     } catch (error) {
       console.error(error.response?.data || error.message)
@@ -69,7 +64,7 @@ const SignUp = () => {
   }
 
   return (
-    <SafeAreaView className='bg-primary h-full'>
+    <SafeAreaView className='bg-primary-900 h-full'>
       <ScrollView>
         <View className='w-full justify-center min-h-[85vh] px-4 my-6'>
           {/* Logo */}
@@ -86,12 +81,12 @@ const SignUp = () => {
             />
           </View>
 
-          <Text className="text-2xl text-white text-semibold mt-10 font-psemibold">
+          <Text className="text-2xl text-white text-semibold mt-5 font-psemibold">
             Sign up to our services.
           </Text>
 
           {/* Name / Surname */}
-          <View className="flex-row mt-10 gap-x-5">
+          <View className="flex-row mt-7 gap-x-5">
             <View className="flex-1">
               <FormField
                 title="First name:"
@@ -158,7 +153,7 @@ const SignUp = () => {
             <Text className='text-lg text-gray-100 font-regular'>
               Have an account already?
             </Text>
-            <Link href="/sign-in" className='text-lg font-psemibold text-secondary'>Sign In</Link>
+            <Link href="/sign-in" className='text-lg font-psemibold text-accent-ble'>Sign In</Link>
           </View>
         </View>
       </ScrollView>

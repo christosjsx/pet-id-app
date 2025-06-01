@@ -17,15 +17,15 @@ const FormField = ({
       <Text className="text-base text-gray-100 font-pmedium">{title}</Text>
 
       <View
-        className="w-full h-16 px-4 bg-black-100 
-                   border-2 border-black-100 rounded-2xl
+        className="w-full h-16 px-4 bg-primary-800 
+                   border-2 border-primary-700 rounded-2xl
                    items-center flex-row"
       >
         <TextInput
           className="flex-1 text-white font-psemibold text-base"
           value={value}
           placeholder={placeholder}
-          placeholderTextColor="#7b7b8b"
+          placeholderTextColor="gray-400"
           onChangeText={handleChangeText}
           secureTextEntry={title==='Password:' && !showPassword}
           {...props}

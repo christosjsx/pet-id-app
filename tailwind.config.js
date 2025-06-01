@@ -4,20 +4,23 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        primary: "#161622",
-        secondary: {
-          DEFAULT: "#00c5cb",
-          100: "#00c5cb",
-          200: "#00c5cb",
+        primary: {
+          900: '#011f4b', // Navy blue
+          800: '#03396c', // Royal blue
+          700: '#005b96'  // Bright blue
         },
-        black: {
-          DEFAULT: "#000",
-          100: "#1E1E2D",
-          200: "#04c8c3",
+        accent: {
+          ble: '#00C5CB', // Your custom key preserved
+          dark: '#00A8B5' // Darker variant
         },
+        white: '#F8FAFC',
         gray: {
-          100: "#CDCDE0",
-        },
+          100: '#F1F5F9',
+          200: '#E2E8F0',
+          300: '#CBD5E1',
+          400: '#94A3B8',
+          500: '#64748B'
+        }
       },
       fontFamily: {
         pthin: ["Poppins-Thin", "sans-serif"],
@@ -28,9 +31,9 @@ module.exports = {
         psemibold: ["Poppins-SemiBold", "sans-serif"],
         pbold: ["Poppins-Bold", "sans-serif"],
         pextrabold: ["Poppins-ExtraBold", "sans-serif"],
-        pblack: ["Poppins-Black", "sans-serif"],
-      },
-    },
+        pblack: ["Poppins-Black", "sans-serif"]
+      }
+    }
   },
-  plugins: [],
-};
+  plugins: []
+}
