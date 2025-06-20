@@ -9,6 +9,7 @@ import CustomButton from '../components/CustomButton';
 export default function App() {
   return (
     <SafeAreaView className="bg-primary-900 h-full">
+      <StatusBar style="light" />
       <ScrollView contentContainerStyle={{height: '100%'}}>
         <View className="w-full justify-center items-center min-h-[85vh] px-4">
           <Image

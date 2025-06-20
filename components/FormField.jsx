@@ -28,6 +28,7 @@ const FormField = ({
           placeholderTextColor="gray-400"
           onChangeText={handleChangeText}
           secureTextEntry={title==='Password:' && !showPassword}
+          autoCapitalize='none'
           {...props}
         />
 

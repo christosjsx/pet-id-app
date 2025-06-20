@@ -32,7 +32,7 @@ const SignIn = () => {
     try {
       setIsSubmitting(true)
 
-      const response = await axios.post('http://192.168.0.102:8000/api/user/token/', {
+      const response = await axios.post('http://192.168.0.101:8000/api/user/token/', {
         'username': email,
         'password': password
       })
@@ -42,7 +42,7 @@ const SignIn = () => {
       await AsyncStorage.setItem('accessToken', access)
       await AsyncStorage.setItem('refreshToken', refresh)
 
-      router.replace('home')
+      router.replace('/home')
     } catch (error) {
       console.error(error.response?.data || error.message)
       Alert.alert('Login Failed', 'Invalid credentials or server error.')
