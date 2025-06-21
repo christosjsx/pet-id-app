@@ -1,29 +1,22 @@
-import { View, Text, ScrollView, Image, Alert } from 'react-native'
+import { View, Text, ScrollView, Alert } from 'react-native'
 import { useState } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter, Link } from 'expo-router'
-
-import { images } from '../../constants'
-import FormField from '../../components/FormField'
-import CustomButton from '../../components/CustomButton'
-
 import axios from 'axios'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 
+import { images } from '../../constants'
+import LogoHeader from '../../components/LogoHeader'
+import FormField from '../../components/FormField'
+import CustomButton from '../../components/CustomButton'
+
 const SignIn = () => {
   const router = useRouter()
-
-  const [form, setForm] = useState({
-    email: '',
-    password: ''
-  })
-
+  const [form, setForm] = useState({ email: '', password: '' })
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const submit = async () => {
-    const email = form.email
-    const password = form.password
-
+    const { email, password } = form
     if (!email || !password) {
       Alert.alert('Missing Fields', 'Please enter both email and password.')
       return
@@ -31,17 +24,13 @@ const SignIn = () => {
 
     try {
       setIsSubmitting(true)
-
-      const response = await axios.post('http://192.168.0.101:8000/api/user/token/', {
-        'username': email,
-        'password': password
-      })
-
+      const response = await axios.post(
+        'http://192.168.0.101:8000/api/user/token/',
+        { username: email, password }
+      )
       const { access, refresh } = response.data
-
       await AsyncStorage.setItem('accessToken', access)
       await AsyncStorage.setItem('refreshToken', refresh)
-
       router.replace('/home')
     } catch (error) {
       console.error(error.response?.data || error.message)
@@ -52,50 +41,46 @@ const SignIn = () => {
   }
 
   return (
-    <SafeAreaView className='bg-primary-900 h-full'>
+    <SafeAreaView className="bg-primary-900 h-full">
       <ScrollView>
-        <View className='w-full min-h-[85vh] px-4 my-6'>
+        <View className="w-full min-h-[85vh] px-4 my-6">
+          {/* Reusable logo header */}
+          <LogoHeader showName={true} />
 
-          {/* Logo section */}
-          <View className='flex-row items-center'>
-            <Image source={images.logoSmall} resizeMode='contain' className='w-[60px] h-[45px]' />
-            <Image source={images.logoName} resizeMode='contain' className='w-[100px] h-[70px]' />
-          </View>
-
-          <Text className='text-2xl text-white font-psemibold mt-5'>
+          {/* Prompt */}
+          <Text className="text-2xl text-white font-psemibold mt-5">
             Log in to our services.
           </Text>
 
-          {/* Form fields */}
+          {/* Form Fields */}
           <FormField
-            title='Email:'
+            title="Email:"
             value={form.email}
-            handleChangeText={(e) => setForm({ ...form, email: e })}
-            otherStyles='mt-7'
-            keyboardType='email-address'
+            handleChangeText={e => setForm({ ...form, email: e })}
+            otherStyles="mt-7"
+            keyboardType="email-address"
           />
-
           <FormField
-            title='Password:'
+            title="Password:"
             value={form.password}
-            handleChangeText={(e) => setForm({ ...form, password: e })}
-            otherStyles='mt-7'
+            handleChangeText={e => setForm({ ...form, password: e })}
+            otherStyles="mt-7"
           />
 
-          {/* Submit button */}
+          {/* Submit Button */}
           <CustomButton
-            title='Sign In'
+            title="Sign In"
             handlePress={submit}
-            containerStyles='mt-10'
+            containerStyles="mt-10"
             isLoading={isSubmitting}
           />
 
-          {/* Navigation link */}
-          <View className='justify-center pt-5 flex-row gap-2'>
-            <Text className='text-lg text-gray-100 font-regular'>
+          {/* Link to Sign Up */}
+          <View className="justify-center pt-5 flex-row gap-2">
+            <Text className="text-lg text-gray-100 font-regular">
               Don't have an account?
             </Text>
-            <Link href='/sign-up' className='text-lg font-psemibold text-accent-ble'>
+            <Link href="/sign-up" className="text-lg font-psemibold text-accent-ble">
               Sign Up
             </Link>
           </View>

@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { images } from '../../constants'
 import { Link, useRouter } from 'expo-router'
 
+import LogoHeader from '../../components/LogoHeader'
 import FormField from '../../components/FormField'
 import CustomButton from '../../components/CustomButton'
 
@@ -68,18 +69,7 @@ const SignUp = () => {
       <ScrollView>
         <View className='w-full justify-center min-h-[85vh] px-4 my-6'>
           {/* Logo */}
-          <View className="flex-row items-center">
-            <Image 
-              source={images.logoSmall}
-              resizeMode='contain' 
-              className='w-[60px] h-[45px]'
-            />
-            <Image 
-              source={images.logoName}
-              resizeMode='contain' 
-              className='w-[100px] h-[70px]'
-            />
-          </View>
+         <LogoHeader showName={true} />
 
           <Text className="text-2xl text-white text-semibold mt-5 font-psemibold">
             Sign up to our services.
