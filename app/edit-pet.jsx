@@ -1,7 +1,7 @@
 import { View, Text, ScrollView, Alert, TouchableOpacity, Image } from 'react-native';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
@@ -10,8 +10,9 @@ import LogoHeader from '../components/LogoHeader';
 import FormField from '../components/FormField';
 import CustomButton from '../components/CustomButton';
 
-const AddPet = () => {
+const EditPet = () => {
   const router = useRouter();
+  const params = useLocalSearchParams();
 
   const [form, setForm] = useState({
     petname: '',
@@ -22,6 +23,19 @@ const AddPet = () => {
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Initialize form with pet data
+  useEffect(() => {
+    if (params.id) {
+      setForm({
+        petname: params.name || '',
+        petbreed: params.breed || '',
+        petage: params.age || '',
+        petgender: params.gender || '',
+        photo: params.photo || '',
+      });
+    }
+  }, [params.id]);
 
   const pickImage = async () => {
     try {
@@ -37,26 +51,65 @@ const AddPet = () => {
       }
     } catch (error) {
       console.log('Image picking error:', error);
-      Alert.alert('Error picking image');
+      Alert.alert('Error', 'Failed to pick image');
     }
   };
 
-  const submit = async () => {
+  const handleSubmit = async () => {
     if (!form.petname || !form.petbreed || !form.petage || !form.petgender) {
-      Alert.alert('All fields except photo are required');
+      Alert.alert('Error', 'All fields except photo are required');
       return;
     }
 
     try {
       setIsSubmitting(true);
-      await axios.post('http://192.168.0.101:8000/api/user/register/', form);
-      router.replace('home');
+      await axios.put(`http://192.168.0.101:8000/api/pets/${params.id}/`, form);
+      router.replace('/home');
     } catch (error) {
-      console.error(error);
-      Alert.alert('Error', error.response?.data?.message || 'Submission failed');
+      console.error('Update error:', error);
+      Alert.alert('Error', error.response?.data?.message || 'Failed to update pet');
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleDelete = () => {
+    Alert.alert(
+      'Delete Pet',
+      'Are you sure you want to delete this pet profile?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setIsSubmitting(true);
+              await axios.delete(`http://192.168.0.101:8000/api/pets/${params.id}/`);
+              router.replace('/home');
+            } catch (error) {
+              console.error('Delete error:', error);
+              Alert.alert('Error', 'Failed to delete pet');
+            } finally {
+              setIsSubmitting(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleReset = () => {
+    setForm({
+      petname: params.name || '',
+      petbreed: params.breed || '',
+      petage: params.age || '',
+      petgender: params.gender || '',
+      photo: params.photo || '',
+    });
   };
 
   return (
@@ -65,14 +118,15 @@ const AddPet = () => {
         <View className="w-full min-h-[85vh] px-4 my-6">
           <LogoHeader showName={true} />
 
-          <Text className="text-2xl text-white font-psemibold mt-3">New Pet Profile</Text>
+          <View className="flex-row justify-between items-center mt-3">
+            <Text className="text-2xl text-white font-psemibold">Edit Pet Details</Text>
+          </View>
           <Text className="text-sm text-gray-300 font-pregular mb-2">
-            Please provide your furry friend's details
+            Update your furry friend's details
           </Text>
 
-          {/* Profile Picture + Name in same row */}
+          {/* Profile Picture + Name */}
           <View className="flex-row items-start mt-5">
-            {/* Profile Picture Field */}
             <View className="w-20">
               <Text className="text-base text-gray-100 font-pmedium mb-2">Picture:</Text>
               <TouchableOpacity
@@ -91,12 +145,11 @@ const AddPet = () => {
               </TouchableOpacity>
             </View>
 
-            {/* Name Field */}
             <View className="flex-1">
               <FormField
                 title="Name:"
                 value={form.petname}
-                handleChangeText={(e) => setForm({ ...form, petname: e })}
+                handleChangeText={(text) => setForm({ ...form, petname: text })}
               />
             </View>
           </View>
@@ -105,68 +158,65 @@ const AddPet = () => {
           <FormField
             title="Breed:"
             value={form.petbreed}
-            handleChangeText={(e) => setForm({ ...form, petbreed: e })}
+            handleChangeText={(text) => setForm({ ...form, petbreed: text })}
             otherStyles="mt-7"
           />
 
           {/* Age and Gender */}
           <View className="flex-row mt-7 space-x-3">
-            {/* Age Field */}
             <View className="flex-1">
               <FormField
                 title="Age:"
                 value={form.petage}
-                handleChangeText={(e) => setForm({ ...form, petage: e })}
+                handleChangeText={(text) => setForm({ ...form, petage: text })}
                 keyboardType="numeric"
               />
             </View>
 
-            {/* Gender Field */}
             <View className="flex-1 space-y-2">
               <Text className="text-base text-gray-100 font-pmedium">Gender:</Text>
               <View className="w-full h-16 bg-primary-800 border-2 border-primary-700 rounded-2xl flex-row">
-                {['Male', 'Female'].map((gender) => (
-                  <TouchableOpacity
-                    key={gender}
-                    className={`flex-1 items-center justify-center rounded-xl ${
-                      form.petgender === gender ? 'bg-accent-ble' : ''
-                    }`}
-                    onPress={() => setForm({ ...form, petgender: gender })}
-                  >
-                    <Text
-                      className={`text-base ${
-                        form.petgender === gender
-                          ? 'text-primary-900 font-psemibold'
-                          : 'text-gray-100 font-pregular'
+                {['Male', 'Female'].map((gender) => {
+                  const isSelected = form.petgender?.toLowerCase() === gender.toLowerCase();
+                  return (
+                    <TouchableOpacity
+                      key={gender}
+                      className={`flex-1 items-center justify-center rounded-xl ${
+                        isSelected ? 'bg-accent-ble' : ''
                       }`}
+                      onPress={() => setForm({ ...form, petgender: gender })}
                     >
-                      {gender}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+                      <Text
+                        className={`text-base ${
+                          isSelected
+                            ? 'text-primary-900 font-psemibold'
+                            : 'text-gray-100 font-pregular'
+                        }`}
+                      >
+                        {gender}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
             </View>
           </View>
 
-          {/* Buttons */}
+          {/* Action Buttons */}
           <View className="mt-10">
-            <CustomButton title="Save Profile" handlePress={submit} isLoading={isSubmitting} />
+            <CustomButton 
+              title="Save Changes" 
+              handlePress={handleSubmit} 
+              isLoading={isSubmitting} 
+            />
 
             <View className="flex-row mt-4 space-x-3">
               <TouchableOpacity
-                className="flex-1 h-16 border-2 border-gray-200 rounded-xl justify-center items-center"
+                className="flex-1 h-16 border-2 border-white bg-rose-500 rounded-xl justify-center items-center"
                 activeOpacity={0.7}
-                onPress={() =>
-                  setForm({
-                    petname: '',
-                    petbreed: '',
-                    petage: '',
-                    petgender: '',
-                    photo: '',
-                  })
-                }
+                onPress={handleDelete}
               >
-                <Text className="text-gray-200 font-psemibold text-lg">Reset</Text>
+                <Text className="text-white font-psemibold text-lg">Delete</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -184,4 +234,4 @@ const AddPet = () => {
   );
 };
 
-export default AddPet;
+export default EditPet;

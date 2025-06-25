@@ -25,7 +25,7 @@ const SignIn = () => {
     try {
       setIsSubmitting(true)
       const response = await axios.post(
-        'http://192.168.0.101:8000/api/user/token/',
+        'http://192.168.0.100:8000/api/user/token/',
         { username: email, password }
       )
       const { access, refresh } = response.data

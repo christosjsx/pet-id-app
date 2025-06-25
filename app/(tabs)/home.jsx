@@ -1,4 +1,3 @@
-
 import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
@@ -22,8 +21,8 @@ const Home = () => {
         {
           id: 1,
           name: 'Freya',
-          age: '3',
-          breed: 'Greek Shepherd',
+          age: '5',
+          breed: 'Labrador Retriever',
           gender: 'female',
           weight: '30',
           photo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/90/Labrador_Retriever_portrait.jpg/1200px-Labrador_Retriever_portrait.jpg',
@@ -99,13 +98,24 @@ const Home = () => {
               />
             ))}
           </View>
+
           {pets.length > 0 && (
-            <View className="bg-primary-800 rounded-3xl p-5 mt-6">
+            <View className="bg-primary-800 rounded-3xl p-5 mt-3">
               {pets.map(pet => (
                 <PetCard
                   key={pet.id}
                   pet={pet}
-                  onEdit={() => Alert.alert('Edit Pet Info', `Editing ${pet.name}`)}
+                  onEdit={() => router.push({
+                    pathname: '/edit-pet',
+                    params: { 
+                      id: pet.id,
+                      name: pet.name,
+                      breed: pet.breed,
+                      age: pet.age,
+                      gender: pet.gender,
+                      photo: pet.photo || ''
+                    }
+                  })}
                 />
               ))}
               <View className="mt-2">
