@@ -48,6 +48,16 @@ const sampleEvents = [
     photo:
       'https://upload.wikimedia.org/wikipedia/commons/thumb/9/90/Labrador_Retriever_portrait.jpg/1200px-Labrador_Retriever_portrait.jpg',
   },
+  {
+    id: 4,
+    petName: 'Freya',
+    type: 'Grooming',
+    icon: 'cut-outline',
+    date: '2025-06-15',
+    notes: 'Full grooming with nail trimming and ear cleaning.',
+    photo:
+      'https://upload.wikimedia.org/wikipedia/commons/thumb/9/90/Labrador_Retriever_portrait.jpg/1200px-Labrador_Retriever_portrait.jpg',
+  },
 ];
 
 const Events = () => {
@@ -156,7 +166,8 @@ const Events = () => {
 
   return (
     <TouchableWithoutFeedback onPress={() => setMenuVisibleId(null)}>
-      <SafeAreaView className="flex-1 bg-primary-900 px-4 pt-4">
+      <SafeAreaView className="flex-1 bg-primary-900 px-4 pt-4"
+                    edges={['right', 'left','top']}>
         <LogoHeader showName={true} containerStyle="mx-auto" />
 
         <View className="flex-row items-center mt-4 mb-4">

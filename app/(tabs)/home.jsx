@@ -63,8 +63,9 @@ const Home = () => {
   };
 
   return (
-    <SafeAreaView className="bg-primary-900 h-full">
-      <ScrollView>
+    <SafeAreaView className="bg-primary-900 flex-1"
+                  edges={['right', 'left','top']}>
+        <ScrollView>
         <View className="w-full min-h-[85vh] px-4 my-6">
           <LogoHeader showName={true} />
           <Text className="text-2xl text-white mt-3 mb-3 ml-1">
