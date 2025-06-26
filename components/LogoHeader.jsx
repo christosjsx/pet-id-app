@@ -1,21 +1,14 @@
-import { View, Image } from 'react-native'
-import { images } from '../constants'
+import { View, Image } from 'react-native';
+import { images } from '../constants';
 
-const LogoHeader = ({ showName = true, containerStyle = '', imageStyle = '' }) => (
-  <View className={`flex-row items-center mt-3 ${containerStyle}`}>
+const LogoHeader = ({ containerStyle = '', imageStyle = '' }) => (
+  <View className={`items-center m-5 ${containerStyle}`}>
     <Image
-      source={images.logoSmall}
+      source={images.logoFull}
       resizeMode='contain'
-      className={`w-[60px] h-[45px] ${imageStyle}`}
+      className={`w-[200px] h-[60px] ${imageStyle}`}
     />
-    {showName && (
-      <Image
-        source={images.logoName}
-        resizeMode='contain'
-        className='w-[100px] h-[70px]'
-      />
-    )}
   </View>
-)
+);
 
-export default LogoHeader
+export default LogoHeader;

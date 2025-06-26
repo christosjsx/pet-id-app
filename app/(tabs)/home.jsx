@@ -2,6 +2,7 @@ import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons'
 
 import LogoHeader from '../../components/LogoHeader';
 import ActionButton from '../../components/ActionButton';
@@ -118,8 +119,19 @@ const Home = () => {
                   })}
                 />
               ))}
-              <View className="mt-2">
-                <Text className="text-lg font-psemibold text-white mb-3">Events</Text>
+                  {/* Events Card */}
+              <View className="bg-primary-900 rounded-3xl p-5">
+                <View className="flex-row items-center mb-3">
+                  <Text className="text-lg font-psemibold text-white mr-2">Events</Text>
+                  <TouchableOpacity
+                    onPress={() => router.push('/(tabs)/events')}
+                    className="bg-primary-600 p-2 rounded-lg"
+                    activeOpacity={0.8}
+                  >
+                    <Ionicons name="create-outline" size={20} color="#5EEAD4" />
+                  </TouchableOpacity>
+                </View>
+
                 {renderEvents()}
               </View>
             </View>

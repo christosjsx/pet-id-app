@@ -74,7 +74,7 @@ const AddPet = () => {
           <View className="flex-row items-start mt-5">
             {/* Profile Picture Field */}
             <View className="w-20">
-              <Text className="text-base text-gray-100 font-pmedium mb-2">Picture:</Text>
+              <Text className="text-base text-gray-100 font-psemibold mb-2">Picture:</Text>
               <TouchableOpacity
                 onPress={pickImage}
                 className="w-16 h-16 rounded-2xl bg-primary-800 border-2 border-primary-700 justify-center items-center"
