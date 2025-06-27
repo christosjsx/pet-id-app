@@ -65,14 +65,36 @@ const AddPet = () => {
         <View className="w-full min-h-[85vh] px-4 my-6">
           <LogoHeader showName={true} />
 
-          <Text className="text-2xl text-white font-psemibold mt-3">New Pet Profile</Text>
+          {/* Title and top-right icons */}
+          <View className="flex-row items-center justify-between mt-3 mb-1">
+            <Text className="text-2xl text-white font-psemibold">New Pet Profile</Text>
+            <View className="flex-row space-x-4">
+              <TouchableOpacity
+                onPress={() =>
+                  setForm({
+                    petname: '',
+                    petbreed: '',
+                    petage: '',
+                    petgender: '',
+                    photo: '',
+                  })
+                }
+                accessibilityLabel="Reset form"
+              >
+                <Ionicons name="refresh-outline" size={24} color="#90EE90" />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => router.back()} accessibilityLabel="Cancel and go back">
+                <Ionicons name="arrow-back-outline" size={24} color="#5EEAD4" />
+              </TouchableOpacity>
+            </View>
+          </View>
+
           <Text className="text-sm text-gray-300 font-pregular mb-2">
             Please provide your furry friend's details
           </Text>
 
           {/* Profile Picture + Name in same row */}
           <View className="flex-row items-start mt-5">
-            {/* Profile Picture Field */}
             <View className="w-20">
               <Text className="text-base text-gray-100 font-psemibold mb-2">Picture:</Text>
               <TouchableOpacity
@@ -91,12 +113,11 @@ const AddPet = () => {
               </TouchableOpacity>
             </View>
 
-            {/* Name Field */}
             <View className="flex-1">
               <FormField
                 title="Name:"
                 value={form.petname}
-                handleChangeText={(e) => setForm({ ...form, petname: e })}
+                handleChangeText={(text) => setForm({ ...form, petname: text })}
               />
             </View>
           </View>
@@ -105,78 +126,53 @@ const AddPet = () => {
           <FormField
             title="Breed:"
             value={form.petbreed}
-            handleChangeText={(e) => setForm({ ...form, petbreed: e })}
+            handleChangeText={(text) => setForm({ ...form, petbreed: text })}
             otherStyles="mt-7"
           />
 
           {/* Age and Gender */}
           <View className="flex-row mt-7 space-x-3">
-            {/* Age Field */}
             <View className="flex-1">
               <FormField
                 title="Age:"
                 value={form.petage}
-                handleChangeText={(e) => setForm({ ...form, petage: e })}
+                handleChangeText={(text) => setForm({ ...form, petage: text })}
                 keyboardType="numeric"
               />
             </View>
 
-            {/* Gender Field */}
             <View className="flex-1 space-y-2">
               <Text className="text-base text-gray-100 font-pmedium">Gender:</Text>
               <View className="w-full h-16 bg-primary-800 border-2 border-primary-700 rounded-2xl flex-row">
-                {['Male', 'Female'].map((gender) => (
-                  <TouchableOpacity
-                    key={gender}
-                    className={`flex-1 items-center justify-center rounded-xl ${
-                      form.petgender === gender ? 'bg-accent-ble' : ''
-                    }`}
-                    onPress={() => setForm({ ...form, petgender: gender })}
-                  >
-                    <Text
-                      className={`text-base ${
-                        form.petgender === gender
-                          ? 'text-primary-900 font-psemibold'
-                          : 'text-gray-100 font-pregular'
+                {['Male', 'Female'].map((gender) => {
+                  const isSelected = form.petgender === gender;
+                  return (
+                    <TouchableOpacity
+                      key={gender}
+                      className={`flex-1 items-center justify-center rounded-xl ${
+                        isSelected ? 'bg-accent-ble' : ''
                       }`}
+                      onPress={() => setForm({ ...form, petgender: gender })}
                     >
-                      {gender}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+                      <Text
+                        className={`text-base ${
+                          isSelected
+                            ? 'text-primary-900 font-psemibold'
+                            : 'text-gray-100 font-pregular'
+                        }`}
+                      >
+                        {gender}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
             </View>
           </View>
 
-          {/* Buttons */}
-          <View className="mt-10">
+          {/* Save Button */}
+          <View className="mt-20">
             <CustomButton title="Save Profile" handlePress={submit} isLoading={isSubmitting} />
-
-            <View className="flex-row mt-4 space-x-3">
-              <TouchableOpacity
-                className="flex-1 h-16 border-2 border-gray-200 rounded-xl justify-center items-center"
-                activeOpacity={0.7}
-                onPress={() =>
-                  setForm({
-                    petname: '',
-                    petbreed: '',
-                    petage: '',
-                    petgender: '',
-                    photo: '',
-                  })
-                }
-              >
-                <Text className="text-gray-200 font-psemibold text-lg">Reset</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                className="flex-1 h-16 border-2 border-rose-500 rounded-xl justify-center items-center"
-                activeOpacity={0.7}
-                onPress={() => router.back()}
-              >
-                <Text className="text-rose-500 font-psemibold text-lg">Cancel</Text>
-              </TouchableOpacity>
-            </View>
           </View>
         </View>
       </ScrollView>

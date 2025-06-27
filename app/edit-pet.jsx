@@ -24,7 +24,6 @@ const EditPet = () => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Initialize form with pet data
   useEffect(() => {
     if (params.id) {
       setForm({
@@ -78,10 +77,7 @@ const EditPet = () => {
       'Delete Pet',
       'Are you sure you want to delete this pet profile?',
       [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
+        { text: 'Cancel', style: 'cancel' },
         {
           text: 'Delete',
           style: 'destructive',
@@ -102,30 +98,42 @@ const EditPet = () => {
     );
   };
 
-  const handleReset = () => {
-    setForm({
-      petname: params.name || '',
-      petbreed: params.breed || '',
-      petage: params.age || '',
-      petgender: params.gender || '',
-      photo: params.photo || '',
-    });
-  };
-
   return (
     <SafeAreaView className="bg-primary-900 h-full">
       <ScrollView>
         <View className="w-full min-h-[85vh] px-4 my-6">
           <LogoHeader showName={true} />
 
-          <View className="flex-row justify-between items-center mt-3">
+          {/* Title + Icons */}
+          <View className="flex-row justify-between items-center mt-3 mb-1">
             <Text className="text-2xl text-white font-psemibold">Edit Pet Details</Text>
+
+            <View className="flex-row space-x-4">
+              {/* Delete icon */}
+              <TouchableOpacity
+                onPress={handleDelete}
+                activeOpacity={0.7}
+                accessibilityLabel="Delete pet"
+              >
+                <Ionicons name="trash-outline" size={24} color="#FCA5A5" />
+              </TouchableOpacity>
+
+              {/* Back icon */}
+              <TouchableOpacity
+                onPress={() => router.back()}
+                activeOpacity={0.7}
+                accessibilityLabel="Go back"
+              >
+                <Ionicons name="arrow-back-outline" size={24} color="#5EEAD4" />
+              </TouchableOpacity>
+            </View>
           </View>
+
           <Text className="text-sm text-gray-300 font-pregular mb-2">
             Update your furry friend's details
           </Text>
 
-          {/* Profile Picture + Name */}
+          {/* Profile Picture + Name Field */}
           <View className="flex-row items-start mt-5">
             <View className="w-20">
               <Text className="text-base text-gray-100 font-psemibold mb-2">Picture:</Text>
@@ -202,31 +210,13 @@ const EditPet = () => {
             </View>
           </View>
 
-          {/* Action Buttons */}
-          <View className="mt-10">
-            <CustomButton 
-              title="Save Changes" 
-              handlePress={handleSubmit} 
-              isLoading={isSubmitting} 
+          {/* Submit Button */}
+          <View className="mt-20">
+            <CustomButton
+              title="Save Changes"
+              handlePress={handleSubmit}
+              isLoading={isSubmitting}
             />
-
-            <View className="flex-row mt-4 space-x-3">
-              <TouchableOpacity
-                className="flex-1 h-16 border-2 border-white bg-rose-500 rounded-xl justify-center items-center"
-                activeOpacity={0.7}
-                onPress={handleDelete}
-              >
-                <Text className="text-white font-psemibold text-lg">Delete</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                className="flex-1 h-16 border-2 border-rose-500 rounded-xl justify-center items-center"
-                activeOpacity={0.7}
-                onPress={() => router.back()}
-              >
-                <Text className="text-rose-500 font-psemibold text-lg">Cancel</Text>
-              </TouchableOpacity>
-            </View>
           </View>
         </View>
       </ScrollView>

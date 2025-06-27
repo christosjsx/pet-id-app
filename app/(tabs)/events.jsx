@@ -111,7 +111,12 @@ const Events = () => {
             {/* Pet Image */}
             <Image
               source={{ uri: item.photo }}
-              className="w-16 h-16 rounded-full border-2 border-accent-ble mr-4"
+              className="w-16 h-16 rounded-full mr-3"
+              style={{
+                borderWidth: 1,
+                borderColor: '#5EEAD4',
+              }
+              }
             />
 
             {/* Event Info + Notes */}
@@ -166,11 +171,11 @@ const Events = () => {
 
   return (
     <TouchableWithoutFeedback onPress={() => setMenuVisibleId(null)}>
-      <SafeAreaView className="flex-1 bg-primary-900 px-4 pt-4"
+      <SafeAreaView className="flex-1 bg-primary-900 px-4 pt-6"
                     edges={['right', 'left','top']}>
         <LogoHeader showName={true} containerStyle="mx-auto" />
 
-        <View className="flex-row items-center mt-4 mb-4">
+        <View className="flex-row items-center mt-3 mb-3 ml-1">
           <Text className="text-white font-psemibold text-2xl mr-1">Events</Text>
           <Ionicons
             name={ascending ? 'arrow-up-outline' : 'arrow-down-outline'}

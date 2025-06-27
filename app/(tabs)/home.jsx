@@ -69,10 +69,10 @@ const Home = () => {
         <View className="w-full min-h-[85vh] px-4 my-6">
           <LogoHeader showName={true} />
           <Text className="text-2xl text-white mt-3 mb-3 ml-1">
-            <Text className="font-pregular">Welcome, </Text>
+            <Text className="text-white font-psemibold text-2xl mr-1">Welcome, </Text>
             <Text className="font-psemibold text-accent-ble">{firstName}</Text>
           </Text>
-          <View className="flex-row justify-between bg-primary-800 p-5 rounded-3xl space-x-3">
+          <View className="flex-row justify-between rounded-3xl">
             {[{
               icon: 'add-circle-outline',
               label: 'Add Pet',
@@ -102,7 +102,7 @@ const Home = () => {
           </View>
 
           {pets.length > 0 && (
-            <View className="bg-primary-800 rounded-3xl p-5 mt-3">
+            <View className="bg-primary-800 rounded-2xl p-5 m-2">
               {pets.map(pet => (
                 <PetCard
                   key={pet.id}
@@ -121,7 +121,7 @@ const Home = () => {
                 />
               ))}
                   {/* Events Card */}
-              <View className="bg-primary-900 rounded-3xl p-5">
+              <View className="bg-primary-900 rounded-2xl p-5">
                 <View className="flex-row items-center mb-3">
                   <Text className="text-lg font-psemibold text-white mr-2">Events</Text>
                   <TouchableOpacity

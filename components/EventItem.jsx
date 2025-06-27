@@ -5,10 +5,10 @@ import { FontAwesome5 } from '@expo/vector-icons'
 const EventItem = ({ event }) => {
   return (
     <View className='flex-row items-center mb-3'>
-      <View className='bg-primary-700 rounded-full p-2 mr-1'>
-        <FontAwesome5 name={event.icon} size={14} color="white" />
+      <View className='bg-primary-700 rounded-full p-2 mr-3'>
+        <FontAwesome5 name={event.icon} size={12} color="white" />
       </View>
-      <Text className='text-base text-white font-pregular mr-1'>
+      <Text className='text-base text-white font-pregular mr-2 text-sm'>
         {event.petName} has a {event.type.toLowerCase()} on {event.date}.
       </Text>
     </View>
