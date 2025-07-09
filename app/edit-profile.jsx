@@ -1,78 +1,76 @@
 import { View, Text, ScrollView, Image, Alert } from 'react-native'
 import { useState } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { images } from '../../constants'
-import { Link, useRouter } from 'expo-router'
+import { Link, useRouter, useLocalSearchParams } from 'expo-router'
 
-import LogoHeader from '../../components/LogoHeader'
-import FormField from '../../components/FormField'
-import CustomButton from '../../components/CustomButton'
+import LogoHeader from '../components/LogoHeader'
+import FormField from '../components/FormField'
+import CustomButton from '../components/CustomButton'
 
 import axios from 'axios'
 
-const SignUp = () => {
+const EditProfile = () => {
   const router = useRouter()
+  const { user } = useLocalSearchParams()
 
+  // Initialize form with user data
   const [form, setForm] = useState({
-    name: '',
-    surname: '',
-    contact: '',
-    area: '',
-    email: '',
-    password: ''
+    name: user?.name || '',
+    surname: user?.surname || '',
+    contact: user?.contact || '',
+    area: user?.area || '',
+    email: user?.email || '',
+    password: '' // Password field left empty for security
   })
 
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const submit = async () => {
-    // Frontend field validation
-    if (!form.name || !form.surname || !form.contact || !form.area || !form.email || !form.password) {
-      Alert.alert('All fields required to register.')
+    // Frontend field validation (excluding password since it's optional for edits)
+    if (!form.name || !form.surname || !form.contact || !form.area || !form.email) {
+      Alert.alert('All fields except password are required.')
       return
     }
 
-    if (form.password.length < 4) {
-      Alert.alert('Password must be at least 6 characters.')
+    // Only validate password if it's being changed
+    if (form.password && form.password.length < 6) {
+      Alert.alert('Password must be at least 6 characters if provided.')
       return
     }
 
     try {
       setIsSubmitting(true)
 
-      // Send POST request to Django backend
-      const response = await axios.post('http://192.168.0.100:8000/api/user/register/', {
+      // Send PUT/PATCH request to update profile
+      const response = await axios.patch('http://192.168.0.100:8000/api/user/profile/', {
         'email': form.email,
-        'username': form.email,
-        'password': form.password,
         'first_name': form.name,
         'last_name': form.surname,
         'contact': form.contact,
-        'area_code': form.area
+        'area_code': form.area,
+        ...(form.password && { 'password': form.password }) // Only include password if changed
       })
 
-      // Extract tokens from Django response
-      const { access, refresh } = response.data
-
-      // Navigate to sign in screen
-      router.replace('sign-in')
+      Alert.alert('Success', 'Profile updated successfully')
+      router.back() // Return to profile page
 
     } catch (error) {
       console.error(error.response?.data || error.message)
-      Alert.alert('Sign up failed.', 'Invalid credentials or server error.')
+      Alert.alert('Update failed.', error.response?.data?.message || 'Failed to update profile')
     } finally {
       setIsSubmitting(false)
     }
   }
 
   return (
-    <SafeAreaView className='bg-primary-900 h-full'>
+     <SafeAreaView className='bg-primary-900 h-full'>
       <ScrollView>
         <View className='w-full justify-center min-h-[85vh] px-4 my-6'>
           {/* Logo */}
          <LogoHeader showName={true} />
 
           <Text className="text-2xl text-white text-semibold mt-5 font-psemibold">
-            Sign up to our services.
+            Edit Your Profile
           </Text>
 
           {/* Name / Surname */}
@@ -122,33 +120,34 @@ const SignUp = () => {
             keyboardType='email-address'
           />
 
-          {/* Password */}
+          {/* Password (optional for changes) */}
           <FormField
-            title='Password:'
+            title='New Password (leave blank to keep current):'
             value={form.password}
             handleChangeText={(e)=> setForm({...form, password: e})}
             otherStyles='mt-3'
+            secureTextEntry
           />
 
-          {/* Submit Button */}
+          {/* Update Button */}
           <CustomButton
-            title='Register'
+            title='Save Changes'
             handlePress={submit}
             containerStyles='mt-7'
             isLoading={isSubmitting}
           />
 
-          {/* Link to Sign In */}
-          <View className='justify-center pt-5 flex-row gap-2'>
-            <Text className='text-lg text-gray-100 font-regular'>
-              Have an account already?
-            </Text>
-            <Link href="/sign-in" className='text-lg font-psemibold text-accent-ble'>Sign In</Link>
-          </View>
+          {/* Cancel Button */}
+          <CustomButton
+            title='Cancel'
+            handlePress={() => router.back()}
+            containerStyles='mt-4 bg-transparent border border-accent-ble'
+            textStyles='text-accent-ble'
+          />
         </View>
       </ScrollView>
     </SafeAreaView>
   )
 }
 
-export default SignUp
+export default EditProfile
