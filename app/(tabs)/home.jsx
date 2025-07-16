@@ -110,7 +110,7 @@ const Home = () => {
     {/* Pet Section Header with View All */}
     <View className="flex-row justify-between items-center mb-2">
       <Text className="text-xl font-psemibold text-white ml-2">Pets</Text>
-      {pets.length > 3 && (
+      {pets.length > 0 && (
         <TouchableOpacity 
           onPress={() => router.push('/pets')}
           activeOpacity={0.7}
