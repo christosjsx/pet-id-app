@@ -28,10 +28,10 @@ const SignIn = () => {
         'http://192.168.0.100:8000/api/user/token/',
         { username: email, password }
       )
-      const { access, refresh } = response.data
+      const { access, refresh, user } = response.data
       await AsyncStorage.setItem('accessToken', access)
       await AsyncStorage.setItem('refreshToken', refresh)
-      router.replace('/home')
+      router.push('/home')
     } catch (error) {
       console.error(error.response?.data || error.message)
       Alert.alert('Login Failed', 'Invalid credentials or server error.')

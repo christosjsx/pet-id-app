@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage'; 
 
 import LogoHeader from '../components/LogoHeader';
 import FormField from '../components/FormField';
@@ -14,10 +15,10 @@ const AddPet = () => {
   const router = useRouter();
 
   const [form, setForm] = useState({
-    petname: '',
-    petbreed: '',
-    petage: '',
-    petgender: '',
+    name: '',
+    breed: '',
+    age: '',
+    gender: '',
     photo: '',
   });
 
@@ -41,23 +42,53 @@ const AddPet = () => {
     }
   };
 
-  const submit = async () => {
-    if (!form.petname || !form.petbreed || !form.petage || !form.petgender) {
-      Alert.alert('All fields except photo are required');
-      return;
+ const submit = async () => {
+  if (!form.name || !form.breed || !form.age || !form.gender) {
+    Alert.alert('All fields except photo are required');
+    return;
+  }
+
+  try {
+    setIsSubmitting(true);
+
+    const accessToken = await AsyncStorage.getItem('accessToken');
+    if (!accessToken) {
+      throw new Error('No access token found');
     }
 
-    try {
-      setIsSubmitting(true);
-      await axios.post('http://192.168.0.101:8000/api/user/register/', form);
-      router.replace('home');
-    } catch (error) {
-      console.error(error);
-      Alert.alert('Error', error.response?.data?.message || 'Submission failed');
-    } finally {
-      setIsSubmitting(false);
+    const data = new FormData();
+    data.append('name', form.name);
+    data.append('breed', form.breed);
+    data.append('age', form.age);
+    data.append('gender', form.gender);
+
+    // Only append photo if it exists
+    if (form.photo) {
+      const fileName = form.photo.split('/').pop();
+      const fileType = fileName.split('.').pop();
+
+      data.append('photo', {
+        uri: form.photo,
+        name: fileName,
+        type: `image/${fileType}`,
+      });
     }
-  };
+
+    await axios.post('http://192.168.0.100:8000/api/pets/pets/', data, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+
+    router.replace('home');
+  } catch (error) {
+    console.error('Submission error:', error.response?.data || error.message);
+    Alert.alert('Error', error.response?.data?.message || 'Submission failed');
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   return (
     <SafeAreaView className="bg-primary-900 h-full">
@@ -72,10 +103,10 @@ const AddPet = () => {
               <TouchableOpacity
                 onPress={() =>
                   setForm({
-                    petname: '',
-                    petbreed: '',
-                    petage: '',
-                    petgender: '',
+                    name: '',
+                    breed: '',
+                    age: '',
+                    gender: '',
                     photo: '',
                   })
                 }
@@ -116,8 +147,8 @@ const AddPet = () => {
             <View className="flex-1">
               <FormField
                 title="Name:"
-                value={form.petname}
-                handleChangeText={(text) => setForm({ ...form, petname: text })}
+                value={form.name}
+                handleChangeText={(text) => setForm({ ...form, name: text })}
               />
             </View>
           </View>
@@ -125,8 +156,8 @@ const AddPet = () => {
           {/* Breed Field */}
           <FormField
             title="Breed:"
-            value={form.petbreed}
-            handleChangeText={(text) => setForm({ ...form, petbreed: text })}
+            value={form.breed}
+            handleChangeText={(text) => setForm({ ...form, breed: text })}
             otherStyles="mt-7"
           />
 
@@ -135,8 +166,8 @@ const AddPet = () => {
             <View className="flex-1">
               <FormField
                 title="Age:"
-                value={form.petage}
-                handleChangeText={(text) => setForm({ ...form, petage: text })}
+                value={form.age}
+                handleChangeText={(text) => setForm({ ...form, age: text })}
                 keyboardType="numeric"
               />
             </View>
@@ -145,14 +176,14 @@ const AddPet = () => {
               <Text className="text-base text-gray-100 font-pmedium">Gender:</Text>
               <View className="w-full h-16 bg-primary-800 border-2 border-primary-700 rounded-2xl flex-row">
                 {['Male', 'Female'].map((gender) => {
-                  const isSelected = form.petgender === gender;
+                  const isSelected = form.gender === gender;
                   return (
                     <TouchableOpacity
                       key={gender}
                       className={`flex-1 items-center justify-center rounded-xl ${
                         isSelected ? 'bg-accent-ble' : ''
                       }`}
-                      onPress={() => setForm({ ...form, petgender: gender })}
+                      onPress={() => setForm({ ...form, gender: gender })}
                     >
                       <Text
                         className={`text-base ${
