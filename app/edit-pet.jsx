@@ -5,6 +5,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import LogoHeader from '../components/LogoHeader';
 import FormField from '../components/FormField';
@@ -15,10 +16,10 @@ const EditPet = () => {
   const params = useLocalSearchParams();
 
   const [form, setForm] = useState({
-    petname: '',
-    petbreed: '',
-    petage: '',
-    petgender: '',
+    name: '',
+    breed: '',
+    age: '',
+    gender: '',
     photo: '',
   });
 
@@ -27,10 +28,10 @@ const EditPet = () => {
   useEffect(() => {
     if (params.id) {
       setForm({
-        petname: params.name || '',
-        petbreed: params.breed || '',
-        petage: params.age || '',
-        petgender: params.gender || '',
+        name: params.name || '',
+        breed: params.breed || '',
+        age: params.age || '',
+        gender: params.gender || '',
         photo: params.photo || '',
       });
     }
@@ -55,22 +56,68 @@ const EditPet = () => {
   };
 
   const handleSubmit = async () => {
-    if (!form.petname || !form.petbreed || !form.petage || !form.petgender) {
-      Alert.alert('Error', 'All fields except photo are required');
+  if (!form.name || !form.breed || !form.age || !form.gender) {
+    Alert.alert('Error', 'All fields except photo are required');
+    return;
+  }
+
+  try {
+    setIsSubmitting(true);
+
+    const token = await AsyncStorage.getItem('accessToken');
+    if (!token) {
+      Alert.alert('Error', 'Access token missing. Please log in again.');
+      setIsSubmitting(false);
       return;
     }
 
-    try {
-      setIsSubmitting(true);
-      await axios.put(`http://192.168.0.101:8000/api/pets/${params.id}/`, form);
-      router.replace('/home');
-    } catch (error) {
-      console.error('Update error:', error);
-      Alert.alert('Error', error.response?.data?.message || 'Failed to update pet');
-    } finally {
-      setIsSubmitting(false);
+    const formData = new FormData();
+    formData.append('name', form.name);
+    formData.append('breed', form.breed);
+    formData.append('age', form.age);
+    formData.append('gender', form.gender);
+
+    // If photo is a local file URI, append it as a file
+    if (form.photo && form.photo.startsWith('file://')) {
+      // Extract file extension for type
+      const uriParts = form.photo.split('.');
+      const fileExtension = uriParts[uriParts.length - 1].toLowerCase();
+
+      // Map common extensions to mime types, default to jpeg
+      const mimeTypes = {
+        jpg: 'image/jpeg',
+        jpeg: 'image/jpeg',
+        png: 'image/png',
+        gif: 'image/gif',
+      };
+      const mimeType = mimeTypes[fileExtension] || 'image/jpeg';
+
+      formData.append('photo', {
+        uri: form.photo,
+        name: `photo.${fileExtension}`,
+        type: mimeType,
+      });
     }
-  };
+
+    await axios.put(
+      `http://192.168.0.100:8000/api/pets/pets/${params.id}/`,
+      formData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+
+    router.replace('/home');
+  } catch (error) {
+    console.error('Update error:', error);
+    Alert.alert('Error', error.response?.data?.message || 'Failed to update pet');
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   const handleDelete = () => {
     Alert.alert(
@@ -84,10 +131,22 @@ const EditPet = () => {
           onPress: async () => {
             try {
               setIsSubmitting(true);
-              await axios.delete(`http://192.168.0.101:8000/api/pets/${params.id}/`);
+
+              const token = await AsyncStorage.getItem('accessToken');
+              if (!token) {
+                Alert.alert('Error', 'Access token missing. Please log in again.');
+                return;
+              }
+
+              await axios.delete(`http://192.168.0.100:8000/api/pets/pets/${params.id}/`, {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              });
+
               router.replace('/home');
             } catch (error) {
-              console.error('Delete error:', error);
+              console.error('Delete error:', error.response?.data || error.message);
               Alert.alert('Error', 'Failed to delete pet');
             } finally {
               setIsSubmitting(false);
@@ -156,8 +215,8 @@ const EditPet = () => {
             <View className="flex-1">
               <FormField
                 title="Name:"
-                value={form.petname}
-                handleChangeText={(text) => setForm({ ...form, petname: text })}
+                value={form.name}
+                handleChangeText={(text) => setForm({ ...form, name: text })}
               />
             </View>
           </View>
@@ -165,8 +224,8 @@ const EditPet = () => {
           {/* Breed Field */}
           <FormField
             title="Breed:"
-            value={form.petbreed}
-            handleChangeText={(text) => setForm({ ...form, petbreed: text })}
+            value={form.breed}
+            handleChangeText={(text) => setForm({ ...form, breed: text })}
             otherStyles="mt-7"
           />
 
@@ -175,8 +234,8 @@ const EditPet = () => {
             <View className="flex-1">
               <FormField
                 title="Age:"
-                value={form.petage}
-                handleChangeText={(text) => setForm({ ...form, petage: text })}
+                value={form.age}
+                handleChangeText={(text) => setForm({ ...form, age: text })}
                 keyboardType="numeric"
               />
             </View>
@@ -185,14 +244,14 @@ const EditPet = () => {
               <Text className="text-base text-gray-100 font-pmedium">Gender:</Text>
               <View className="w-full h-16 bg-primary-800 border-2 border-primary-700 rounded-2xl flex-row">
                 {['Male', 'Female'].map((gender) => {
-                  const isSelected = form.petgender?.toLowerCase() === gender.toLowerCase();
+                  const isSelected = form.gender?.toLowerCase() === gender.toLowerCase();
                   return (
                     <TouchableOpacity
                       key={gender}
                       className={`flex-1 items-center justify-center rounded-xl ${
                         isSelected ? 'bg-accent-ble' : ''
                       }`}
-                      onPress={() => setForm({ ...form, petgender: gender })}
+                      onPress={() => setForm({ ...form, gender: gender })}
                     >
                       <Text
                         className={`text-base ${

@@ -122,7 +122,7 @@ const Home = () => {
 
     {/* Pet Cards - Limited to 3 initially */}
     <View className="space-y-4">
-      {pets.slice(0, 20).map(pet => (
+      {pets.slice(0, 2).map(pet => (
         <PetCard
           key={pet.id}
           pet={pet}
