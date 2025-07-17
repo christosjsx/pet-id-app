@@ -9,6 +9,7 @@ import FormField from '../../components/FormField'
 import CustomButton from '../../components/CustomButton'
 
 import axios from 'axios'
+import { API_BASE_URL } from '../../constants/config';
 
 const SignUp = () => {
   const router = useRouter()
@@ -40,7 +41,7 @@ const SignUp = () => {
       setIsSubmitting(true)
 
       // Send POST request to Django backend
-      const response = await axios.post('http://192.168.0.100:8000/api/user/register/', {
+      const response = await axios.post(`${API_BASE_URL}/api/user/register/`, {
         'email': form.email,
         'username': form.email,
         'password': form.password,

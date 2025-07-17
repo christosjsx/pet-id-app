@@ -12,8 +12,10 @@ import { useState, useEffect } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+import { API_BASE_URL } from '../../constants/config';
 
 import LogoHeader from '../../components/LogoHeader';
 import CustomButton from '../../components/CustomButton';
@@ -32,7 +34,7 @@ const Pets = () => {
           return;
         }
 
-        const response = await axios.get('http://192.168.0.100:8000/api/pets/pets/', {
+        const response = await axios.get(`${API_BASE_URL}/api/pets/pets/`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

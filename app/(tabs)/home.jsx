@@ -3,8 +3,10 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API_BASE_URL } from '../../constants/config';
 
 import LogoHeader from '../../components/LogoHeader';
 import ActionButton from '../../components/ActionButton';
@@ -24,7 +26,7 @@ const Home = () => {
         throw new Error('No access token found');
       }
 
-      const response = await axios.get('http://192.168.0.100:8000/api/user/me/', {
+      const response = await axios.get(`${API_BASE_URL}/api/user/me/`, {
         headers: {
           'Authorization': `Bearer ${accessToken}`
         }
@@ -47,7 +49,7 @@ const Home = () => {
         throw new Error('No access token found');
       }
 
-      const response = await axios.get('http://192.168.0.100:8000/api/pets/pets/', {
+      const response = await axios.get(`${API_BASE_URL}/api/pets/pets/`, {
         headers: {
           'Authorization': `Bearer ${accessToken}`
         }
@@ -120,7 +122,7 @@ const Home = () => {
       )}
     </View>
 
-    {/* Pet Cards - Limited to 3 initially */}
+    {/* Pet Cards - Limited to 2*/}
     <View className="space-y-4">
       {pets.slice(0, 2).map(pet => (
         <PetCard
@@ -141,17 +143,19 @@ const Home = () => {
       ))}
     </View>
 
-    {/* Events section remains unchanged */}
+    {/* Events Header */}
+    <View className="flex-row items-center mb-2 justify-between">
+      <Text className="text-lg font-psemibold text-white ml-2">Events</Text>
+      <TouchableOpacity onPress={() => router.push('/(tabs)/events')} activeOpacity={0.7}>
+            <Text className="text-accent-ble font-pmedium mr-2">View All</Text>
+      </TouchableOpacity>
+    </View>
+    {/*Event List Card*/}
     <View className="bg-primary-900 rounded-2xl p-5 mt-1">
-      <View className="flex-row items-center mb-3 justify-between">
-        <Text className="text-lg font-psemibold text-white">Events</Text>
-         <TouchableOpacity onPress={() => router.push('/(tabs)/events')} activeOpacity={0.7}>
-          <Text className="text-accent-ble font-pmedium">View All</Text>
-        </TouchableOpacity>
+        <Text className="text-lg font-psemibold text-white">Events List</Text>
       </View>
       {renderEvents()}
     </View>
-  </View>
 )}
           
           <View className="flex-row justify-between rounded-2xl">

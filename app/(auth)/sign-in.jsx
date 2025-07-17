@@ -10,6 +10,8 @@ import LogoHeader from '../../components/LogoHeader'
 import FormField from '../../components/FormField'
 import CustomButton from '../../components/CustomButton'
 
+import { API_BASE_URL } from '../../constants/config';
+
 const SignIn = () => {
   const router = useRouter()
   const [form, setForm] = useState({ email: '', password: '' })
@@ -25,7 +27,7 @@ const SignIn = () => {
     try {
       setIsSubmitting(true)
       const response = await axios.post(
-        'http://192.168.0.100:8000/api/user/token/',
+        `${API_BASE_URL}/api/user/token/`,
         { username: email, password }
       )
       const { access, refresh, user } = response.data

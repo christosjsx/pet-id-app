@@ -4,8 +4,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
+
 import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage'; 
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API_BASE_URL } from '../constants/config';
 
 import LogoHeader from '../components/LogoHeader';
 import FormField from '../components/FormField';
@@ -74,7 +76,7 @@ const AddPet = () => {
       });
     }
 
-    await axios.post('http://192.168.0.100:8000/api/pets/pets/', data, {
+    await axios.post(`${API_BASE_URL}/api/pets/pets/`, data, {
       headers: {
         'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'multipart/form-data',

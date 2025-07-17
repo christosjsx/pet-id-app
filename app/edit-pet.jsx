@@ -4,8 +4,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
+
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API_BASE_URL } from '../constants/config';
 
 import LogoHeader from '../components/LogoHeader';
 import FormField from '../components/FormField';
@@ -100,7 +102,7 @@ const EditPet = () => {
     }
 
     await axios.put(
-      `http://192.168.0.100:8000/api/pets/pets/${params.id}/`,
+      `${API_BASE_URL}/api/pets/pets/${params.id}/`,
       formData,
       {
         headers: {
@@ -138,7 +140,7 @@ const EditPet = () => {
                 return;
               }
 
-              await axios.delete(`http://192.168.0.100:8000/api/pets/pets/${params.id}/`, {
+              await axios.delete(`${API_BASE_URL}/api/pets/pets/${params.id}/`, {
                 headers: {
                   Authorization: `Bearer ${token}`,
                 },
