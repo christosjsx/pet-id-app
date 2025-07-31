@@ -106,10 +106,9 @@ const SignUp = () => {
             </View>
             <View className="flex-1">
               <FormField
-                title='Area code:'
+                title='Location:'
                 value={form.area}
                 handleChangeText={(e)=> setForm({...form, area: e})}
-                keyboardType="phone-pad"
               />
             </View>
           </View>
