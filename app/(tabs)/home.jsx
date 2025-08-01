@@ -1,5 +1,6 @@
 import { View, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LogoHeader from '../../components/LogoHeader';
@@ -58,6 +59,7 @@ const Home = () => {
   };
 
   {/* Fetch Events */}
+  
   const fetchEventData = async () => {
     try {
       const accessToken = await AsyncStorage.getItem('accessToken');
@@ -89,6 +91,13 @@ const Home = () => {
   useEffect(() => {
     fetchAllData();
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchAllData();
+    }, [])
+  );
+
 
   {/* Loading State */ }
   if (loading) {
@@ -187,7 +196,7 @@ const Home = () => {
                 icon: 'calendar-outline',
                 label: 'Add Event',
                 color: '#ff6363',
-                action: () => router.push('/add-edit-event')
+                action: () => router.push('/add-event')
               }
             ].map((btn, idx) => (
               

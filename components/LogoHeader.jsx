@@ -2,7 +2,7 @@ import { View, Image } from 'react-native';
 import { images } from '../constants';
 
 const LogoHeader = ({ containerStyle = '', imageStyle = '' }) => (
-  <View className={`items-center m-5 ${containerStyle}`}>
+  <View className={`items-center mx-5 mb-2 ${containerStyle}`}>
     <Image
       source={images.logoFull}
       resizeMode='contain'

@@ -3,7 +3,7 @@ import { FontAwesome5 } from '@expo/vector-icons';
 
 const ICON_SIZE = 13;
 const ICON_CONTAINER_SIZE = 24;
-const MAX_NOTE_LENGTH = 40;
+const MAX_NOTE_LENGTH = 30;
 
 const iconMap = {
   'vet visit': { name: 'heartbeat', color: '#ff4d4d' },

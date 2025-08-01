@@ -38,7 +38,8 @@ const RootLayout = () => {
         <Stack.Screen name="(tabs)" options={{headerShown:false}}/>
         <Stack.Screen name="add-pet" options={{ headerShown: false }} />
         <Stack.Screen name="edit-pet" options={{ headerShown: false }} />
-        <Stack.Screen name="add-edit-event" options={{ headerShown: false }} />
+        <Stack.Screen name="add-event" options={{ headerShown: false }} />
+        <Stack.Screen name="edit-event" options={{ headerShown: false }} />
         <Stack.Screen name="edit-profile" options={{ headerShown: false }} />
         {/* <Stack.Screen name="/search/[query]" options={{headerShown:false}}/> */}
     </Stack>

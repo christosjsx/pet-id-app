@@ -11,54 +11,51 @@ import { useState, useEffect } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API_BASE_URL } from '../../constants/config';
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback } from 'react';
+
 
 import LogoHeader from '../../components/LogoHeader';
 import CustomButton from '../../components/CustomButton';
 
 const EVENT_TYPES = ['All', 'Vet Visit', 'Grooming', 'Medication'];
 
-const sampleEvents = [
-  {
-    id: 1,
-    petName: 'Freya',
-    type: 'Vet Visit',
-    icon: 'medkit-outline',
-    date: '2025-07-01',
-    notes: 'General check-up and rabies vaccination.',
-    photo:
-      'https://upload.wikimedia.org/wikipedia/commons/thumb/9/90/Labrador_Retriever_portrait.jpg/1200px-Labrador_Retriever_portrait.jpg',
-  },
-  {
-    id: 2,
-    petName: 'Loki',
-    type: 'Medication',
-    icon: 'bandage-outline',
-    date: '2025-06-28',
-    notes: 'Heartworm preventative administered.',
-    photo:
-      'https://images.happypet.care/images/20260/white-central-asian-shepherd-portrait.webp',
-  },
-  {
-    id: 3,
-    petName: 'Freya',
-    type: 'Grooming',
-    icon: 'cut-outline',
-    date: '2025-06-15',
-    notes: 'Full grooming with nail trimming and ear cleaning.',
-    photo:
-      'https://upload.wikimedia.org/wikipedia/commons/thumb/9/90/Labrador_Retriever_portrait.jpg/1200px-Labrador_Retriever_portrait.jpg',
-  },
-  {
-    id: 4,
-    petName: 'Freya',
-    type: 'Grooming',
-    icon: 'cut-outline',
-    date: '2025-06-15',
-    notes: 'Full grooming with nail trimming and ear cleaning.',
-    photo:
-      'https://upload.wikimedia.org/wikipedia/commons/thumb/9/90/Labrador_Retriever_portrait.jpg/1200px-Labrador_Retriever_portrait.jpg',
-  },
-];
+// 🔧 Helpers
+const toTitleCase = str =>
+  str
+    .toLowerCase()
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+
+
+const getIconName = (eventType) => {
+  switch (eventType.toLowerCase()) {
+    case 'vet visit':
+      return 'medkit-outline';
+    case 'grooming':
+      return 'cut-outline';
+    case 'medication':
+      return 'bandage-outline';
+    default:
+      return 'calendar-outline';
+  }
+};
+
+const formatDateTime = (dateStr, timeStr) => {
+  const date = new Date(`${dateStr}T${timeStr}`);
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sept", "Oct", "Nov", "Dec"];
+  const month = months[date.getMonth()];
+  const day = date.getDate();
+  let hours = date.getHours();
+  const minutes = date.getMinutes().toString().padStart(2, '0');
+  const ampm = hours >= 12 ? 'p.m.' : 'a.m.';
+  hours = hours % 12 || 12;
+  return `${month} ${day} · ${hours}:${minutes} ${ampm}`;
+};
 
 const Events = () => {
   const [events, setEvents] = useState([]);
@@ -66,32 +63,76 @@ const Events = () => {
   const [ascending, setAscending] = useState(true);
   const [menuVisibleId, setMenuVisibleId] = useState(null);
 
-  useEffect(() => {
-    setEvents(sampleEvents);
-  }, []);
+useFocusEffect(
+  useCallback(() => {
+    const fetchEvents = async () => {
+      try {
+        const accessToken = await AsyncStorage.getItem('accessToken');
+        const response = await axios.get(`${API_BASE_URL}/api/pets/events/`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+
+        const formatted = response.data.map(event => ({
+          id: event.id,
+          petName: event.pet_name,
+          type: toTitleCase(event.event_type),
+          icon: getIconName(event.event_type),
+          date: formatDateTime(event.date, event.time),
+          rawDate: event.date,
+          notes: event.notes,
+          photo: event.pet_photo,
+        }));
+
+        setEvents(formatted);
+      } catch (error) {
+        console.error('Failed to fetch events:', error);
+        Alert.alert('Error', 'Could not load events from the server.');
+      }
+    };
+
+    fetchEvents();
+  }, [])
+);
 
   const filteredEvents = events.filter(event =>
-    filter === 'All' ? true : event.type === filter
+    filter === 'All' ? true : event.type.toLowerCase() === filter.toLowerCase()
   );
 
   const sortedEvents = [...filteredEvents].sort((a, b) => {
-    if (ascending) return new Date(a.date) - new Date(b.date);
-    else return new Date(b.date) - new Date(a.date);
+    if (ascending) return new Date(a.rawDate) - new Date(b.rawDate);
+    else return new Date(b.rawDate) - new Date(a.rawDate);
   });
 
   const handleDelete = id => {
-    Alert.alert('Delete Event', 'Are you sure you want to delete this event?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: () => setEvents(prev => prev.filter(e => e.id !== id)),
+  Alert.alert('Delete Event', 'Are you sure you want to delete this event?', [
+    { text: 'Cancel', style: 'cancel' },
+    {
+      text: 'Delete',
+      style: 'destructive',
+      onPress: async () => {
+        try {
+          const accessToken = await AsyncStorage.getItem('accessToken');
+          await axios.delete(`${API_BASE_URL}/api/pets/events/${id}/`, {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          });
+
+          setEvents(prev => prev.filter(e => e.id !== id));
+        } catch (error) {
+          console.error('Failed to delete event:', error);
+          Alert.alert('Error', 'Could not delete the event. Please try again.');
+        }
       },
-    ]);
-  };
+    },
+  ]);
+};
+
 
   const handleAdd = () => {
-    router.push('/add-edit-event'); // Push to your add/edit event screen
+    router.push('/add-event');
   };
 
   const handleEdit = (event) => {
@@ -112,14 +153,10 @@ const Events = () => {
             <Image
               source={{ uri: item.photo }}
               className="w-16 h-16 rounded-full mr-3"
-              style={{
-                borderWidth: 1,
-                borderColor: '#5EEAD4',
-              }
-              }
+              style={{ borderWidth: 1, borderColor: '#5EEAD4' }}
             />
 
-            {/* Event Info + Notes */}
+            {/* Info */}
             <View className="flex-1 pr-2">
               <View className="flex-row items-center mb-1">
                 <View className="bg-primary-900 rounded-full p-1 mr-2">
@@ -135,7 +172,7 @@ const Events = () => {
               <Text className="text-gray-400 text-xs mt-1">{item.date}</Text>
             </View>
 
-            {/* Action Menu */}
+            {/* Menu */}
             <View className="justify-center items-center w-[40px]">
               {isMenuOpen ? (
                 <>
@@ -171,8 +208,7 @@ const Events = () => {
 
   return (
     <TouchableWithoutFeedback onPress={() => setMenuVisibleId(null)}>
-      <SafeAreaView className="flex-1 bg-primary-900 px-4 pt-6"
-                    edges={['right', 'left','top']}>
+      <SafeAreaView className="flex-1 bg-primary-900 px-4 pt-6" edges={['right', 'left', 'top']}>
         <LogoHeader showName={true} containerStyle="mx-auto" />
 
         <View className="flex-row items-center mt-3 mb-3 ml-1">
@@ -213,7 +249,7 @@ const Events = () => {
           ))}
         </View>
 
-        {/* Event List */}
+        {/* List */}
         <FlatList
           data={sortedEvents}
           keyExtractor={item => item.id.toString()}
