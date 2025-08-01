@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+ // Imports
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -12,122 +13,80 @@ import {
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import LogoHeader from '../components/LogoHeader';
-import { API_BASE_URL } from '../constants/config';
+
+import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API_BASE_URL } from '../constants/config';
+
 
 // Constants
 const EVENT_TYPES = ['Vet Visit', 'Grooming', 'Medication'];
+const PET_NAMES = ['Freya', 'Loki'];
 
-const AddEvent = () => {
+const AddEditEvent = () => {
   const router = useRouter();
+  const { event } = useLocalSearchParams();
+  const parsedEvent = event ? JSON.parse(event) : null;
 
-  // State for form
-  const [type, setType] = useState(EVENT_TYPES[0]);
-  const [notes, setNotes] = useState('');
-  const [date, setDate] = useState(new Date());
+  // State
+  const [type, setType] = useState(parsedEvent?.type || EVENT_TYPES[0]);
+  const [notes, setNotes] = useState(parsedEvent?.notes || '');
+  const [date, setDate] = useState(parsedEvent?.date ? new Date(parsedEvent.date) : new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
-  const [selectedPets, setSelectedPets] = useState([]);
+  const [selectedPets, setSelectedPets] = useState(
+    parsedEvent?.petName ? [parsedEvent.petName] : []
+  );
 
-  // State for pets fetched from API
-  const [pets, setPets] = useState([]);
-  const [loadingPets, setLoadingPets] = useState(true);
-
-  // Fetch user's pets from API on mount
-  useEffect(() => {
-    const fetchPets = async () => {
-      try {
-        const token = await AsyncStorage.getItem('accessToken'); // Adjust key if different
-        const response = await fetch(`${API_BASE_URL}/api/pets/pets`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        });
-        if (!response.ok) throw new Error('Failed to fetch pets');
-        const data = await response.json();
-        setPets(data); // Assuming data is array of pet objects with `id` and `name`
-      } catch (error) {
-        console.error('Error loading pets:', error);
-        setPets([]); // fallback to empty array
-      } finally {
-        setLoadingPets(false);
-      }
-    };
-
-    fetchPets();
-  }, []);
-
-  // Toggle pet selection (by pet id)
-  const togglePetSelection = (petId) => {
+  // Helpers
+  const togglePetSelection = (pet) => {
     setSelectedPets((prev) =>
-      prev.includes(petId) ? prev.filter((p) => p !== petId) : [...prev, petId]
+      prev.includes(pet) ? prev.filter((p) => p !== pet) : [...prev, pet]
     );
   };
 
-  // Format date to YYYY-MM-DD for API
-  const formatDate = (date) => {
-    return date.toISOString().split('T')[0];
+  const getIconByType = (eventType) => {
+    switch (eventType) {
+      case 'Vet Visit':
+        return 'medkit-outline';
+      case 'Medication':
+        return 'bandage-outline';
+      case 'Grooming':
+        return 'cut-outline';
+      default:
+        return 'calendar-outline';
+    }
   };
 
-  // Format time to HH:mm:ss for API
-  const formatTimeForAPI = (date) => {
-    return date.toTimeString().split(' ')[0];
-  };
-
-  // Format time for display in UI
   const formatTime = (date) => {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  // Save handler with API request
-  const handleSave = async () => {
+  // Save logic
+  const handleSave = () => {
     if (selectedPets.length === 0 || !type || !date) {
       Alert.alert('Missing Info', 'Please select at least one pet, an event type, and a date.');
       return;
     }
 
-    try {
-      const token = await AsyncStorage.getItem('accessToken');
-      if (!token) {
-        Alert.alert('Unauthorized', 'You need to be logged in to save an event.');
-        return;
-      }
+    const baseEvent = {
+      type,
+      notes,
+      date: date.toISOString(),
+      icon: getIconByType(type),
+      photo: parsedEvent?.photo || '',
+    };
 
-      for (const petId of selectedPets) {
-        const payload = {
-          pet: petId,
-          event_type: type.toLowerCase(), // lowercase per API
-          notes,
-          date: formatDate(date),
-          time: formatTimeForAPI(date),
-          is_completed: false,
-        };
+    const newEvents = selectedPets.map((pet) => ({
+      ...baseEvent,
+      id: parsedEvent?.id || Date.now() + Math.random(),
+      petName: pet,
+    }));
 
-        const response = await fetch(`${API_BASE_URL}/api/pets/events/`, {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(payload),
-        });
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(`Failed to save event: ${errorText}`);
-        }
-      }
-
-      Alert.alert('Success', 'Event(s) saved successfully!');
-      router.back();
-
-    } catch (error) {
-      console.error(error);
-      Alert.alert('Error', 'There was a problem saving your event. Please try again.');
-    }
+    console.log('SAVED EVENTS:', newEvents);
+    router.back();
   };
 
   return (
@@ -136,7 +95,9 @@ const AddEvent = () => {
 
       {/* Header with Title left and Back button right */}
       <View className="flex-row items-center justify-between mb-6">
-        <Text className="text-white text-2xl font-psemibold">Add Event</Text>
+        <Text className="text-white text-2xl font-psemibold">
+          {parsedEvent ? 'Edit Event' : 'Add Event'}
+        </Text>
 
         <TouchableOpacity
           onPress={() => router.push('/(tabs)/events')}
@@ -155,34 +116,28 @@ const AddEvent = () => {
           {/* Pet Selection */}
           <Text className="text-white font-pmedium mb-2">Assign to Pet(s)</Text>
           <View className="flex-row flex-wrap gap-2 mb-4">
-            {loadingPets ? (
-              <Text className="text-gray-400">Loading pets...</Text>
-            ) : pets.length === 0 ? (
-              <Text className="text-gray-400">No pets found.</Text>
-            ) : (
-              pets.map((pet) => (
-                <TouchableOpacity
-                  key={pet.id}
-                  onPress={() => togglePetSelection(pet.id)}
-                  className={`px-3 py-2 rounded-xl border-2 ${
-                    selectedPets.includes(pet.id) ? 'border-accent-ble' : 'border-gray-700'
+            {PET_NAMES.map((pet) => (
+              <TouchableOpacity
+                key={pet}
+                onPress={() => togglePetSelection(pet)}
+                className={`px-3 py-2 rounded-xl border-2 ${
+                  selectedPets.includes(pet) ? 'border-accent-ble' : 'border-gray-700'
+                }`}
+              >
+                <Text
+                  className={`${
+                    selectedPets.includes(pet)
+                      ? 'text-white font-psemibold'
+                      : 'text-gray-400 font-pregular'
                   }`}
                 >
-                  <Text
-                    className={`${
-                      selectedPets.includes(pet.id)
-                        ? 'text-white font-psemibold'
-                        : 'text-gray-400 font-pregular'
-                    }`}
-                  >
-                    {pet.name}
-                  </Text>
-                </TouchableOpacity>
-              ))
-            )}
+                  {pet}
+                </Text>
+              </TouchableOpacity>
+            ))}
           </View>
 
-          {/* Event Type Picker */}
+          {/* Type Picker */}
           <Text className="text-white font-pmedium mb-2">Event Type</Text>
           <View className="flex-row flex-wrap gap-2 mb-4">
             {EVENT_TYPES.map((item) => (
@@ -195,7 +150,9 @@ const AddEvent = () => {
               >
                 <Text
                   className={`${
-                    type === item ? 'text-white font-psemibold' : 'text-gray-400 font-pregular'
+                    type === item
+                      ? 'text-white font-psemibold'
+                      : 'text-gray-400 font-pregular'
                   }`}
                 >
                   {item}
@@ -249,7 +206,7 @@ const AddEvent = () => {
             </View>
           </View>
 
-          {/* Notes input */}
+          {/* Notes */}
           <Text className="text-white font-pmedium mb-2">Notes</Text>
           <TextInput
             value={notes}
@@ -266,7 +223,9 @@ const AddEvent = () => {
             onPress={handleSave}
             className="bg-accent-ble rounded-xl min-h-[62px] justify-center items-center"
           >
-            <Text className="text-primary-900 font-psemibold text-lg">Add Event</Text>
+            <Text className="text-primary-900 font-psemibold text-lg">
+              {parsedEvent ? 'Update Event' : 'Add Event'}
+            </Text>
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -274,4 +233,4 @@ const AddEvent = () => {
   );
 };
 
-export default AddEvent;
+export default AddEditEvent;
