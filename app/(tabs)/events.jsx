@@ -81,6 +81,7 @@ useFocusEffect(
           icon: getIconName(event.event_type),
           date: formatDateTime(event.date, event.time),
           rawDate: event.date,
+          rawTime: event.time,
           notes: event.notes,
           photo: event.pet_photo,
         }));
@@ -136,8 +137,9 @@ useFocusEffect(
   };
 
   const handleEdit = (event) => {
+    console.log(event)
     router.push({
-      pathname: '/add-edit-event',
+      pathname: '/edit-event',
       params: { event: JSON.stringify(event) },
     });
   };

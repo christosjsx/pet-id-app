@@ -1,19 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  Platform,
-  ScrollView,
-  KeyboardAvoidingView,
-  Alert,
-} from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Platform, ScrollView, KeyboardAvoidingView, Alert,} from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+
 import LogoHeader from '../components/LogoHeader';
+
 import { API_BASE_URL } from '../constants/config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -24,7 +17,7 @@ const AddEvent = () => {
   const router = useRouter();
 
   // State for form
-  const [type, setType] = useState(EVENT_TYPES[0]);
+  const [type, setType] = useState('');
   const [notes, setNotes] = useState('');
   const [date, setDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);

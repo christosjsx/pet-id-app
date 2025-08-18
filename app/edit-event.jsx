@@ -1,5 +1,4 @@
- // Imports
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -15,94 +14,183 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import LogoHeader from '../components/LogoHeader';
-
-import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_BASE_URL } from '../constants/config';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-
-// Constants
 const EVENT_TYPES = ['Vet Visit', 'Grooming', 'Medication'];
-const PET_NAMES = ['Freya', 'Loki'];
 
-const AddEditEvent = () => {
+const EditEvent = () => {
   const router = useRouter();
-  const { event } = useLocalSearchParams();
-  const parsedEvent = event ? JSON.parse(event) : null;
+  const { event } = useLocalSearchParams(); // event is stringified
 
-  // State
-  const [type, setType] = useState(parsedEvent?.type || EVENT_TYPES[0]);
-  const [notes, setNotes] = useState(parsedEvent?.notes || '');
-  const [date, setDate] = useState(parsedEvent?.date ? new Date(parsedEvent.date) : new Date());
+  // Parse once per event change
+  const parsedEvent = useMemo(() => {
+    try {
+      return event ? JSON.parse(event) : null;
+    } catch {
+      return null;
+    }
+  }, [event]);
+
+  // Form state
+  const [type, setType] = useState(EVENT_TYPES[0]);
+  const [notes, setNotes] = useState('');
+  const [date, setDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
-  const [selectedPets, setSelectedPets] = useState(
-    parsedEvent?.petName ? [parsedEvent.petName] : []
-  );
+  const [selectedPets, setSelectedPets] = useState([]);
 
-  // Helpers
-  const togglePetSelection = (pet) => {
-    setSelectedPets((prev) =>
-      prev.includes(pet) ? prev.filter((p) => p !== pet) : [...prev, pet]
-    );
-  };
+  // Pets
+  const [pets, setPets] = useState([]);
+  const [loadingPets, setLoadingPets] = useState(true);
 
-  const getIconByType = (eventType) => {
-    switch (eventType) {
-      case 'Vet Visit':
-        return 'medkit-outline';
-      case 'Medication':
-        return 'bandage-outline';
-      case 'Grooming':
-        return 'cut-outline';
-      default:
-        return 'calendar-outline';
+  // Formatters
+  const formatDate = (d) => d.toISOString().split('T')[0];
+  const formatTimeForAPI = (d) => d.toTimeString().split(' ')[0];
+  const formatTime = (d) =>
+    d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+  // Load pets
+  useEffect(() => {
+    const fetchPets = async () => {
+      try {
+        const token = await AsyncStorage.getItem('accessToken');
+        const response = await fetch(`${API_BASE_URL}/api/pets/pets`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!response.ok) throw new Error('Failed to fetch pets');
+        const data = await response.json();
+        setPets(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error('Error loading pets:', error);
+        setPets([]);
+      } finally {
+        setLoadingPets(false);
+      }
+    };
+    fetchPets();
+  }, []);
+
+  // Pre-fill form with event details (excluding pet selection)
+useEffect(() => {
+  if (!parsedEvent) return;
+
+  setType(parsedEvent.type || EVENT_TYPES[0]);
+  setNotes(parsedEvent.notes || '');
+
+  // Case 1: datetime is already provided (rare)
+  if (parsedEvent.datetime) {
+    const dt = new Date(parsedEvent.datetime);
+    if (!isNaN(dt.getTime())) setDate(dt);
+    return;
+  }
+
+  // Case 2: use rawDate + rawTime (preferred)
+  if (parsedEvent.rawDate) {
+    const timePart = parsedEvent.rawTime || "00:00:00"; // fallback midnight
+    const combined = `${parsedEvent.rawDate}T${timePart}`;
+    const dt = new Date(combined);
+
+    if (!isNaN(dt.getTime())) {
+      setDate(dt);
+      return;
     }
-  };
+  }
+}, [parsedEvent]);
 
-  const formatTime = (date) => {
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
-
-  // Save logic
-  const handleSave = () => {
-    if (selectedPets.length === 0 || !type || !date) {
-      Alert.alert('Missing Info', 'Please select at least one pet, an event type, and a date.');
+  // Select the pet based on event.petName once pets are loaded
+  const didInitSelection = useRef(false);
+  useEffect(() => {
+    if (didInitSelection.current) return; // run once
+    if (loadingPets) return;
+    if (!parsedEvent) {
+      if (pets.length > 0) setSelectedPets([String(pets[0].id)]);
+      didInitSelection.current = true;
       return;
     }
 
-    const baseEvent = {
-      type,
-      notes,
-      date: date.toISOString(),
-      icon: getIconByType(type),
-      photo: parsedEvent?.photo || '',
-    };
+    const eventPetName = parsedEvent.petName?.toLowerCase?.();
+    const match = pets.find(
+      (p) => eventPetName && p.name.toLowerCase() === eventPetName
+    );
 
-    const newEvents = selectedPets.map((pet) => ({
-      ...baseEvent,
-      id: parsedEvent?.id || Date.now() + Math.random(),
-      petName: pet,
-    }));
+    if (match) {
+      setSelectedPets([String(match.id)]);
+    } else if (pets.length > 0) {
+      setSelectedPets([String(pets[0].id)]);
+    }
+    didInitSelection.current = true;
+  }, [parsedEvent, loadingPets, pets]);
 
-    console.log('SAVED EVENTS:', newEvents);
-    router.back();
+  // Toggle pet selection (multi-select preserved)
+  const togglePetSelection = (petId) => {
+    const idStr = String(petId);
+    setSelectedPets((prev) =>
+      prev.includes(idStr) ? prev.filter((p) => p !== idStr) : [...prev, idStr]
+    );
+  };
+
+  // Update event
+  const handleUpdate = async () => {
+    if (selectedPets.length === 0 || !type || !date) {
+      Alert.alert(
+        'Missing Info',
+        'Please select at least one pet, an event type, and a date.'
+      );
+      return;
+    }
+
+    try {
+      const token = await AsyncStorage.getItem('accessToken');
+      if (!token) {
+        Alert.alert('Unauthorized', 'You need to be logged in to update an event.');
+        return;
+      }
+
+      const payload = {
+        pet: selectedPets[0], // using first selected pet for API
+        event_type: String(type || '').toLowerCase(),
+        notes,
+        date: formatDate(date),
+        time: formatTimeForAPI(date),
+      };
+
+      const response = await fetch(
+        `${API_BASE_URL}/api/pets/events/${parsedEvent?.id}/`,
+        {
+          method: 'PATCH',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to update event: ${errorText}`);
+      }
+
+      Alert.alert('Success', 'Event updated successfully!');
+      router.back();
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Error', 'There was a problem updating your event. Please try again.');
+    }
   };
 
   return (
     <SafeAreaView className="flex-1 bg-primary-900 px-4 pt-4">
       <LogoHeader showName={true} containerStyle="mx-auto" />
 
-      {/* Header with Title left and Back button right */}
+      {/* Header */}
       <View className="flex-row items-center justify-between mb-6">
-        <Text className="text-white text-2xl font-psemibold">
-          {parsedEvent ? 'Edit Event' : 'Add Event'}
-        </Text>
-
+        <Text className="text-white text-2xl font-psemibold">Edit Event</Text>
         <TouchableOpacity
-          onPress={() => router.push('/(tabs)/events')}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          onPress={() => router.back()}
           className="p-2"
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
           <Ionicons name="arrow-back" size={28} color="#5EEAD4" />
         </TouchableOpacity>
@@ -116,28 +204,38 @@ const AddEditEvent = () => {
           {/* Pet Selection */}
           <Text className="text-white font-pmedium mb-2">Assign to Pet(s)</Text>
           <View className="flex-row flex-wrap gap-2 mb-4">
-            {PET_NAMES.map((pet) => (
-              <TouchableOpacity
-                key={pet}
-                onPress={() => togglePetSelection(pet)}
-                className={`px-3 py-2 rounded-xl border-2 ${
-                  selectedPets.includes(pet) ? 'border-accent-ble' : 'border-gray-700'
-                }`}
-              >
-                <Text
-                  className={`${
-                    selectedPets.includes(pet)
-                      ? 'text-white font-psemibold'
-                      : 'text-gray-400 font-pregular'
-                  }`}
-                >
-                  {pet}
-                </Text>
-              </TouchableOpacity>
-            ))}
+            {loadingPets ? (
+              <Text className="text-gray-400">Loading pets...</Text>
+            ) : pets.length === 0 ? (
+              <Text className="text-gray-400">No pets found.</Text>
+            ) : (
+              pets.map((pet) => {
+                const idStr = String(pet.id);
+                const isSelected = selectedPets.includes(idStr);
+                return (
+                  <TouchableOpacity
+                    key={pet.id}
+                    onPress={() => togglePetSelection(pet.id)}
+                    className={`px-3 py-2 rounded-xl border-2 ${
+                      isSelected ? 'border-accent-ble' : 'border-gray-700'
+                    }`}
+                  >
+                    <Text
+                      className={`${
+                        isSelected
+                          ? 'text-white font-psemibold'
+                          : 'text-gray-400 font-pregular'
+                      }`}
+                    >
+                      {pet.name}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })
+            )}
           </View>
 
-          {/* Type Picker */}
+          {/* Event Type Picker */}
           <Text className="text-white font-pmedium mb-2">Event Type</Text>
           <View className="flex-row flex-wrap gap-2 mb-4">
             {EVENT_TYPES.map((item) => (
@@ -161,7 +259,7 @@ const AddEditEvent = () => {
             ))}
           </View>
 
-          {/* Date and Time Pickers */}
+          {/* Date & Time */}
           <View className="flex-row justify-between mb-4">
             <View className="flex-1 mr-2">
               <Text className="text-white font-pmedium mb-2">Date</Text>
@@ -178,7 +276,17 @@ const AddEditEvent = () => {
                   display="default"
                   onChange={(event, selectedDate) => {
                     if (Platform.OS === 'android') setShowDatePicker(false);
-                    if (selectedDate) setDate(selectedDate);
+                    if (selectedDate) {
+                      setDate(
+                        new Date(
+                          selectedDate.getFullYear(),
+                          selectedDate.getMonth(),
+                          selectedDate.getDate(),
+                          date.getHours(),
+                          date.getMinutes()
+                        )
+                      );
+                    }
                   }}
                 />
               )}
@@ -199,7 +307,17 @@ const AddEditEvent = () => {
                   display={Platform.OS === 'ios' ? 'spinner' : 'default'}
                   onChange={(event, selectedTime) => {
                     if (Platform.OS === 'android') setShowTimePicker(false);
-                    if (selectedTime) setDate(selectedTime);
+                    if (selectedTime) {
+                      setDate(
+                        new Date(
+                          date.getFullYear(),
+                          date.getMonth(),
+                          date.getDate(),
+                          selectedTime.getHours(),
+                          selectedTime.getMinutes()
+                        )
+                      );
+                    }
                   }}
                 />
               )}
@@ -212,19 +330,19 @@ const AddEditEvent = () => {
             value={notes}
             onChangeText={setNotes}
             multiline
-            placeholder="e.g., Rabies vaccination and general check-up"
+            placeholder="e.g., Updated notes for vet visit"
             placeholderTextColor="#aaa"
             className="bg-primary-800 text-white p-3 rounded-xl h-32 text-base mb-8"
             textAlignVertical="top"
           />
 
-          {/* Save Button */}
+          {/* Update Button */}
           <TouchableOpacity
-            onPress={handleSave}
+            onPress={handleUpdate}
             className="bg-accent-ble rounded-xl min-h-[62px] justify-center items-center"
           >
             <Text className="text-primary-900 font-psemibold text-lg">
-              {parsedEvent ? 'Update Event' : 'Add Event'}
+              Update Event
             </Text>
           </TouchableOpacity>
         </ScrollView>
@@ -233,4 +351,4 @@ const AddEditEvent = () => {
   );
 };
 
-export default AddEditEvent;
+export default EditEvent;
