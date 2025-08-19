@@ -76,9 +76,12 @@ const Profile = () => {
 
         <View className="flex-row items-center">
           <Text className="text-white text-xl font-psemibold mr-2">{user.name}</Text>
-          <TouchableOpacity onPress={() => router.push('/edit-profile')}>
-            <Ionicons name="create-outline" size={18} color="#5EEAD4" />
-          </TouchableOpacity>
+          <TouchableOpacity onPress={() => router.push({
+              pathname: '/edit-profile',
+              params: { user: JSON.stringify(user) } // convert object to string
+            })}>
+              <Ionicons name="create-outline" size={18} color="#5EEAD4" />
+            </TouchableOpacity>
         </View>
         <Text className="text-gray-400 text-sm mt-1">{user.email}</Text>
       </View>

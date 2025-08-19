@@ -1,153 +1,183 @@
-import { View, Text, ScrollView, Image, Alert } from 'react-native'
-import { useState } from 'react'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { Link, useRouter, useLocalSearchParams } from 'expo-router'
+import { View, Text, ScrollView, Alert, TouchableOpacity } from 'react-native';
+import { useState, useEffect } from 'react';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API_BASE_URL } from '../constants/config';
 
-import LogoHeader from '../components/LogoHeader'
-import FormField from '../components/FormField'
-import CustomButton from '../components/CustomButton'
-
-import axios from 'axios'
+import LogoHeader from '../components/LogoHeader';
+import FormField from '../components/FormField';
+import CustomButton from '../components/CustomButton';
 
 const EditProfile = () => {
-  const router = useRouter()
-  const { user } = useLocalSearchParams()
+  const router = useRouter();
 
-  // Initialize form with user data
   const [form, setForm] = useState({
-    name: user?.name || '',
-    surname: user?.surname || '',
-    contact: user?.contact || '',
-    area: user?.area || '',
-    email: user?.email || '',
-    password: '' // Password field left empty for security
-  })
+    name: '',
+    surname: '',
+    contact: '',
+    location: '',
+    email: '',
+  });
 
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const submit = async () => {
-    // Frontend field validation (excluding password since it's optional for edits)
-    if (!form.name || !form.surname || !form.contact || !form.area || !form.email) {
-      Alert.alert('All fields except password are required.')
-      return
-    }
+  // Fetch user info on mount
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const token = await AsyncStorage.getItem('accessToken');
+        if (!token) {
+          Alert.alert('Error', 'Access token missing. Please log in again.');
+          return;
+        }
 
-    // Only validate password if it's being changed
-    if (form.password && form.password.length < 6) {
-      Alert.alert('Password must be at least 6 characters if provided.')
-      return
-    }
+        const response = await axios.get(`${API_BASE_URL}/api/user/me/`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
 
-    try {
-      setIsSubmitting(true)
+        const user = response.data;
+        setForm({
+          name: user.first_name || '',
+          surname: user.last_name || '',
+          contact: user.contact || '',
+          location: user.location || '',
+          email: user.email || '',
+        });
+      } catch (error) {
+        console.error(error.response?.data || error.message);
+        Alert.alert('Error', 'Failed to fetch user data');
+      }
+    };
 
-      // Send PUT/PATCH request to update profile
-      const response = await axios.patch('http://192.168.0.100:8000/api/user/profile/', {
-        'email': form.email,
-        'first_name': form.name,
-        'last_name': form.surname,
-        'contact': form.contact,
-        'area_code': form.area,
-        ...(form.password && { 'password': form.password }) // Only include password if changed
-      })
+    fetchUser();
+  }, []);
 
-      Alert.alert('Success', 'Profile updated successfully')
-      router.back() // Return to profile page
-
-    } catch (error) {
-      console.error(error.response?.data || error.message)
-      Alert.alert('Update failed.', error.response?.data?.message || 'Failed to update profile')
-    } finally {
-      setIsSubmitting(false)
-    }
+  const handleSubmit = async () => {
+  if (!form.name || !form.surname || !form.contact || !form.location || !form.email) {
+    Alert.alert('Error', 'All fields are required');
+    return;
   }
 
-  return (
-     <SafeAreaView className='bg-primary-900 h-full'>
-      <ScrollView>
-        <View className='w-full justify-center min-h-[85vh] px-4 my-6'>
-          {/* Logo */}
-         <LogoHeader showName={true} />
+  try {
+    setIsSubmitting(true);
 
-          <Text className="text-2xl text-white text-semibold mt-5 font-psemibold">
-            Edit Your Profile
+    const token = await AsyncStorage.getItem('accessToken');
+    if (!token) {
+      Alert.alert('Error', 'Access token missing. Please log in again.');
+      setIsSubmitting(false);
+      return;
+    }
+
+    await axios.put(
+      `${API_BASE_URL}/api/user/me/`, 
+      {
+        first_name: form.name,
+        last_name: form.surname,
+        contact: form.contact,
+        location: form.location,
+        email: form.email,
+      },
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+
+    Alert.alert('Success', 'Profile updated successfully');
+    router.back();
+  } catch (error) {
+    console.error(error.response?.data || error.message);
+    Alert.alert('Update failed', error.response?.data?.message || 'Failed to update profile');
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+
+
+  return (
+    <SafeAreaView className="bg-primary-900 h-full">
+      <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
+        <View className="w-full min-h-[85vh] px-4 my-6">
+          <LogoHeader showName={true} />
+
+          {/* Title + Back Button */}
+          <View className="flex-row justify-between items-center mt-3 mb-1">
+            <Text className="text-2xl text-white font-psemibold">Edit Profile</Text>
+            <TouchableOpacity
+              onPress={() => router.back()}
+              activeOpacity={0.7}
+              className="flex-row items-center"
+              accessibilityLabel="Go back"
+            >
+              <Ionicons name="arrow-back-outline" size={24} color="#5EEAD4" />
+              <Text className="text-base text-[#5EEAD4] font-pmedium ml-1">Back</Text>
+            </TouchableOpacity>
+          </View>
+
+          <Text className="text-sm text-gray-300 font-pregular mb-5">
+            Update your profile details
           </Text>
 
           {/* Name / Surname */}
-          <View className="flex-row mt-7 gap-x-5">
+          <View className="flex-row gap-x-5">
             <View className="flex-1">
               <FormField
                 title="First name:"
                 value={form.name}
-                handleChangeText={(e) => setForm({ ...form, name: e })}
+                handleChangeText={(text) => setForm({ ...form, name: text })}
               />
             </View>
             <View className="flex-1">
               <FormField
                 title="Last name:"
                 value={form.surname}
-                handleChangeText={(e) => setForm({ ...form, surname: e })}
+                handleChangeText={(text) => setForm({ ...form, surname: text })}
               />
             </View>
           </View>
 
-          {/* Contact / Area */}
+          {/* Contact / Location */}
           <View className="flex-row mt-3 gap-x-5">
             <View className="flex-1">
               <FormField
-                title='Contact number:'
+                title="Contact number:"
                 value={form.contact}
-                handleChangeText={(e)=> setForm({...form, contact: e})}
+                handleChangeText={(text) => setForm({ ...form, contact: text })}
                 keyboardType="phone-pad"
               />
             </View>
             <View className="flex-1">
               <FormField
-                title='Area code:'
-                value={form.area}
-                handleChangeText={(e)=> setForm({...form, area: e})}
-                keyboardType="phone-pad"
+                title="Location:"
+                value={form.location}
+                handleChangeText={(text) => setForm({ ...form, location: text })}
               />
             </View>
           </View>
 
           {/* Email */}
           <FormField
-            title='Email:'
+            title="Email:"
             value={form.email}
-            handleChangeText={(e)=> setForm({...form, email: e})}
-            otherStyles='mt-3'
-            keyboardType='email-address'
+            handleChangeText={(text) => setForm({ ...form, email: text })}
+            otherStyles="mt-3"
+            keyboardType="email-address"
           />
 
-          {/* Password (optional for changes) */}
-          <FormField
-            title='New Password (leave blank to keep current):'
-            value={form.password}
-            handleChangeText={(e)=> setForm({...form, password: e})}
-            otherStyles='mt-3'
-            secureTextEntry
-          />
-
-          {/* Update Button */}
-          <CustomButton
-            title='Save Changes'
-            handlePress={submit}
-            containerStyles='mt-7'
-            isLoading={isSubmitting}
-          />
-
-          {/* Cancel Button */}
-          <CustomButton
-            title='Cancel'
-            handlePress={() => router.back()}
-            containerStyles='mt-4 bg-transparent border border-accent-ble'
-            textStyles='text-accent-ble'
-          />
+          {/* Submit Button */}
+          <View className="mt-10">
+            <CustomButton
+              title="Save Changes"
+              handlePress={handleSubmit}
+              isLoading={isSubmitting}
+            />
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>
-  )
-}
+  );
+};
 
-export default EditProfile
+export default EditProfile;
